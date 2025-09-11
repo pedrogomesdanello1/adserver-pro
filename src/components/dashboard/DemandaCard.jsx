@@ -1,0 +1,159 @@
+import React from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Clock,
+  Eye,
+  Cog,
+  CheckCircle2,
+  Calendar,
+  User,
+  Trash2,
+  Server,
+  Briefcase,
+  Building,
+  MessageSquareDashed
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
+
+const statusConfig = {
+  pendente_visualizacao: { icon: Clock, color: "text-amber-700", bgColor: "bg-amber-100", label: "Pendente" },
+  visualizada: { icon: Eye, color: "text-blue-700", bgColor: "bg-blue-100", label: "Visualizada" },
+  em_producao: { icon: Cog, color: "text-purple-700", bgColor: "bg-purple-100", label: "Em Produção" },
+  finalizada: { icon: CheckCircle2, color: "text-emerald-700", bgColor: "bg-emerald-100", label: "Finalizada" }
+};
+const areaConfig = {
+  suporte: { color: "bg-blue-100 text-blue-800", label: "Suporte" },
+  atendimento: { color: "bg-emerald-100 text-emerald-800", label: "Atendimento" },
+  comercial: { color: "bg-purple-100 text-purple-800", label: "Comercial" }
+};
+const prioridadeConfig = {
+  baixa: { color: "bg-slate-100 text-slate-700", label: "Baixa" },
+  media: { color: "bg-yellow-100 text-yellow-800", label: "Média" },
+  alta: { color: "bg-orange-100 text-orange-800", label: "Alta" },
+  urgente: { color: "bg-red-100 text-red-800", label: "Urgente" }
+};
+
+export default function DemandaCard({ demanda, criador, onStatusChange, onDelete, onSelect }) {
+  const formatDateSafely = (dateString, formatPattern) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+    return format(date, formatPattern, { locale: ptBR });
+  };
+
+  const statusInfo = statusConfig[demanda.status];
+  const StatusIcon = statusInfo.icon;
+
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
+  };
+
+  return (
+    <motion.div
+      onClick={onSelect}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-full">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 flex flex-col gap-2">
+              <div>
+                <h3 className="font-semibold text-slate-900 text-lg leading-tight">
+                  {demanda.titulo}
+                </h3>
+                <p className="text-slate-600 text-sm line-clamp-2 mt-1">
+                  {demanda.descricao}
+                </p>
+              </div>
+                  {demanda.observacoes && (
+                    <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-100 p-2 rounded-md mt-2">
+                      <MessageSquareDashed className="h-4 w-4" />
+                      <span className="font-medium">Possui observações</span>
+                    </div>
+                  )}
+              <div className="flex flex-wrap gap-2">
+                <Badge className={areaConfig[demanda.area_responsavel]?.color}>
+                  {areaConfig[demanda.area_responsavel]?.label}
+                </Badge>
+                <Badge className={prioridadeConfig[demanda.prioridade]?.color}>
+                  {prioridadeConfig[demanda.prioridade]?.label}
+                </Badge>
+              </div>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="ml-2" onClick={handleMenuClick}>
+                  <div className={`p-1 rounded-full ${statusInfo.bgColor}`}>
+                    <StatusIcon className={`w-4 h-4 ${statusInfo.color}`} />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {Object.entries(statusConfig).map(([status, config]) => (
+                  <DropdownMenuItem
+                    key={status}
+                    onClick={(e) => { handleMenuClick(e); onStatusChange(demanda.id, status); }}
+                    className="flex items-center gap-2"
+                  >
+                    <config.icon className={`w-4 h-4 ${config.color}`} />
+                    {config.label}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => { handleMenuClick(e); onDelete(demanda.id); }}
+                  className="flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-0 flex-grow flex flex-col justify-end">
+           <div className="space-y-2 text-sm text-slate-600 mt-4">
+             {demanda.adserver && ( <div className="flex items-center gap-2"><Server className="w-4 h-4 text-slate-400" /><span>{demanda.adserver}</span></div> )}
+             {demanda.agencia && ( <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400" /><span>{demanda.agencia}</span></div> )}
+             {demanda.cliente_final && ( <div className="flex items-center gap-2"><Building className="w-4 h-4 text-slate-400" /><span>{demanda.cliente_final}</span></div> )}
+           </div>
+          <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-4">
+              {demanda.responsavel_designado && (
+                <div className="flex items-center gap-1">
+                  <User className="w-4 h-4" />
+                  <span>{demanda.responsavel_designado}</span>
+                </div>
+              )}
+              {demanda.prazo_estimado && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDateSafely(demanda.prazo_estimado, "dd/MM")}</span>
+                </div>
+              )}
+            </div>
+            <div className="text-xs">
+              {formatDateSafely(demanda.created_at, "dd/MM/yy")}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
