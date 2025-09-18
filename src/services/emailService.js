@@ -1,6 +1,10 @@
+// Importar o serviço real de email
+export { emailServiceReal as emailService } from '@/services/emailServiceReal';
+
+// Código antigo comentado para referência
+/*
 import { supabase } from '@/lib/supabaseClient';
 import { Notificacao } from '@/entities/Notificacao';
-import { emailServiceReal as emailService } from '@/services/emailServiceReal';
 
 class EmailService {
   // Enviar notificação por email quando um comentário é adicionado
@@ -214,3 +218,4 @@ class EmailService {
 }
 
 export const emailService = new EmailService();
+*/
