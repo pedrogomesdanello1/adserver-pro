@@ -347,6 +347,7 @@ export default function Dashboard() {
       <NotificationPopup 
         isOpen={showNotificationPopup}
         onClose={() => setShowNotificationPopup(false)}
+        onNotificationChange={(count) => setUnreadNotificationsCount(count)}
       />
     </div>
   );

@@ -7,11 +7,12 @@ import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const NotificationPopup = ({ isOpen, onClose }) => {
+const NotificationPopup = ({ isOpen, onClose, onNotificationChange }) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const loadNotifications = async () => {
     if (!user) return;
@@ -23,6 +24,11 @@ const NotificationPopup = ({ isOpen, onClose }) => {
       
       const count = await Notificacao.countUnread(user.id);
       setUnreadCount(count);
+      
+      // Notificar o componente pai sobre mudanças
+      if (onNotificationChange) {
+        onNotificationChange(count);
+      }
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
     } finally {
@@ -37,14 +43,15 @@ const NotificationPopup = ({ isOpen, onClose }) => {
   }, [isOpen, user]);
 
   const handleMarkAsRead = async (notificationId) => {
+    setActionLoading(notificationId);
     try {
       await Notificacao.markAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, lida: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      // Recarregar notificações para garantir sincronização
+      await loadNotifications();
     } catch (error) {
       console.error('Erro ao marcar notificação como lida:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -53,20 +60,23 @@ const NotificationPopup = ({ isOpen, onClose }) => {
     
     try {
       await Notificacao.markAllAsRead(user.id);
-      setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
-      setUnreadCount(0);
+      // Recarregar notificações para garantir sincronização
+      await loadNotifications();
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
     }
   };
 
   const handleDelete = async (notificationId) => {
+    setActionLoading(notificationId);
     try {
       await Notificacao.delete(notificationId);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      // Recarregar notificações para garantir sincronização
+      await loadNotifications();
     } catch (error) {
       console.error('Erro ao deletar notificação:', error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -192,18 +202,28 @@ const NotificationPopup = ({ isOpen, onClose }) => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleMarkAsRead(notification.id)}
+                                disabled={actionLoading === notification.id}
                                 className="p-1 h-6 w-6"
                               >
-                                <Check className="w-3 h-3" />
+                                {actionLoading === notification.id ? (
+                                  <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="w-3 h-3" />
+                                )}
                               </Button>
                             )}
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(notification.id)}
+                              disabled={actionLoading === notification.id}
                               className="p-1 h-6 w-6 text-slate-400 hover:text-red-500"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              {actionLoading === notification.id ? (
+                                <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
                             </Button>
                           </div>
                         </div>
