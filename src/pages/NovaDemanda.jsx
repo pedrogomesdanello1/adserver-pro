@@ -52,6 +52,7 @@ export default function NovaDemanda() {
   }, []);
 
   const handleInputChange = (campo, valor) => {
+    console.log('NovaDemanda: handleInputChange', campo, valor);
     if (campo === 'agencia') {
         if (valor && !agencias.some(a => a.value === valor)) {
             setAgencias(prev => [...prev, { value: valor, label: valor }]);

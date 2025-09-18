@@ -54,6 +54,7 @@ const ResponsibleSelector = ({
   const selectedUser = users.find(user => user.id === value);
 
   const handleSelect = (user) => {
+    console.log('ResponsibleSelector: Selecionando usuário', user);
     onChange(user.id);
     setIsOpen(false);
     setSearchQuery('');
@@ -69,7 +70,13 @@ const ResponsibleSelector = ({
     <div className={`relative ${className}`}>
       <button
         type="button"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
         disabled={disabled}
         className={`w-full flex items-center justify-between px-3 py-2 border border-slate-200 rounded-lg bg-white text-left focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-slate-300'
@@ -142,7 +149,12 @@ const ResponsibleSelector = ({
                   {/* Opção para limpar seleção */}
                   {selectedUser && (
                     <button
-                      onClick={handleClear}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleClear();
+                      }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 transition-colors"
                     >
                       <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
@@ -158,7 +170,12 @@ const ResponsibleSelector = ({
                   {filteredUsers.map((user) => (
                     <button
                       key={user.id}
-                      onClick={() => handleSelect(user)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSelect(user);
+                      }}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 transition-colors ${
                         selectedUser?.id === user.id ? 'bg-blue-50' : ''
                       }`}
