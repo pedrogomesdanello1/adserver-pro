@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import StatusCards from "../components/dashboard/StatusCards";
 import DemandaCard from "../components/dashboard/DemandaCard";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
+import ComentariosSection from "../components/dashboard/ComentariosSection";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -185,14 +186,14 @@ export default function Dashboard() {
       
       {/* -- Seção do Pop-up (Dialog) -- */}
       <Dialog open={!!demandaSelecionada} onOpenChange={() => setDemandaSelecionada(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">{demandaSelecionada?.titulo}</DialogTitle>
             <DialogDescription>
               Criado em: {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4 text-sm">
+          <div className="space-y-6 py-4 text-sm">
             {demandaSelecionada?.profile && (
               <div>
                 <h4 className="font-semibold mb-2 text-slate-800">Criado por</h4>
@@ -218,6 +219,11 @@ export default function Dashboard() {
                 <h4 className="font-semibold mb-2 text-slate-800">Observações Adicionais</h4>
                 <p className="text-slate-600 whitespace-pre-wrap">{demandaSelecionada?.observacoes}</p>
               </div>
+            )}
+            
+            {/* Seção de Comentários */}
+            {demandaSelecionada && (
+              <ComentariosSection demandaId={demandaSelecionada.id} />
             )}
           </div>
         </DialogContent>

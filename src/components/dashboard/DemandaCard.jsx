@@ -13,7 +13,8 @@ import {
   Server,
   Briefcase,
   Building,
-  MessageSquareDashed
+  MessageSquareDashed,
+  MessageSquare
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -83,6 +84,14 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
                     <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-100 p-2 rounded-md mt-2">
                       <MessageSquareDashed className="h-4 w-4" />
                       <span className="font-medium">Possui observações</span>
+                    </div>
+                  )}
+                  {demanda.comentarios_count && demanda.comentarios_count[0]?.count > 0 && (
+                    <div className="flex items-center gap-2 text-xs text-blue-800 bg-blue-100 p-2 rounded-md mt-2">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="font-medium">
+                        {demanda.comentarios_count[0].count} comentário{demanda.comentarios_count[0].count !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   )}
               <div className="flex flex-wrap gap-2">
