@@ -2,7 +2,7 @@
 -- Execute este código no SQL Editor do Supabase
 
 -- 1. Adicionar a coluna 'status' se ela não existir
-ALTER TABLE demandas ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pendente_visualizacao';
+ALTER TABLE demandas ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'pendente_visualizacao';
 
 -- 2. Atualizar todas as demandas existentes para ter um status padrão
 UPDATE demandas SET status = 'pendente_visualizacao' WHERE status IS NULL;
