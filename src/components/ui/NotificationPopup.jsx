@@ -68,11 +68,19 @@ const NotificationPopup = ({ isOpen, onClose, onNotificationChange }) => {
   };
 
   const handleDelete = async (notificationId) => {
+    console.log('Iniciando exclusão da notificação:', notificationId);
     setActionLoading(notificationId);
     try {
-      await Notificacao.delete(notificationId);
-      // Recarregar notificações para garantir sincronização
-      await loadNotifications();
+      const result = await Notificacao.delete(notificationId);
+      console.log('Resultado da exclusão:', result);
+      
+      if (result) {
+        // Recarregar notificações para garantir sincronização
+        await loadNotifications();
+        console.log('Notificações recarregadas após exclusão');
+      } else {
+        console.error('Falha ao deletar notificação');
+      }
     } catch (error) {
       console.error('Erro ao deletar notificação:', error);
     } finally {

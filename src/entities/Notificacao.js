@@ -78,15 +78,20 @@ export const Notificacao = {
 
   // Deletar notificação
   delete: async (notificacaoId) => {
-    const { error } = await supabase
+    console.log('Tentando deletar notificação:', notificacaoId);
+    
+    const { data, error } = await supabase
       .from('notificacoes')
       .delete()
-      .eq('id', notificacaoId);
+      .eq('id', notificacaoId)
+      .select();
 
     if (error) {
       console.error("Erro ao deletar notificação:", error);
       return false;
     }
+    
+    console.log('Notificação deletada com sucesso:', data);
     return true;
   }
 };
