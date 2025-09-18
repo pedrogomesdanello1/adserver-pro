@@ -75,7 +75,7 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
     return format(date, formatPattern, { locale: ptBR });
   };
 
-  const statusInfo = statusConfig[demanda.status];
+  const statusInfo = statusConfig[demanda.status] || statusConfig['pendente_visualizacao'];
   const StatusIcon = statusInfo.icon;
 
   // Carregar dados do responsável
