@@ -3,6 +3,9 @@ import { Demanda } from '@/entities/Demanda';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import MentionInput from '@/components/ui/MentionInput';
+import ImagePreview from '@/components/ui/ImagePreview';
+import SearchInput from '@/components/ui/SearchInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Send, Trash2, User, Edit2, Check, X, Paperclip, Download } from 'lucide-react';
@@ -10,9 +13,11 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
 
 export default function ComentariosSection({ demandaId }) {
   const { user } = useAuth();
+  const { notify } = useNotifications();
   const [comentarios, setComentarios] = useState([]);
   const [novoComentario, setNovoComentario] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,10 +26,14 @@ export default function ComentariosSection({ demandaId }) {
   const [editText, setEditText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [userNames, setUserNames] = useState({});
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredComentarios, setFilteredComentarios] = useState([]);
 
   useEffect(() => {
     if (demandaId) {
       loadComentarios();
+      loadAvailableUsers();
       
       // Configurar notificações em tempo real
       const channel = supabase
@@ -79,6 +88,7 @@ export default function ComentariosSection({ demandaId }) {
     try {
       const data = await Demanda.getComentarios(demandaId);
       setComentarios(data);
+      setFilteredComentarios(data);
       
       // Buscar nomes dos usuários únicos
       const userIds = [...new Set(data.map(c => c.user_id))];
@@ -113,6 +123,73 @@ export default function ComentariosSection({ demandaId }) {
     }
   };
 
+  const loadAvailableUsers = async () => {
+    try {
+      // Buscar todos os usuários para menções
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, email, raw_user_meta_data');
+      
+      if (error) {
+        console.error('Erro ao buscar usuários para menção:', error);
+        return;
+      }
+      
+      const users = profiles.map(profile => ({
+        id: profile.id,
+        name: profile.raw_user_meta_data?.name,
+        email: profile.email
+      }));
+      
+      setAvailableUsers(users);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    }
+  };
+
+  const handleMention = (mentionedUser) => {
+    // Notificar que um usuário foi mencionado
+    notify.info('Usuário mencionado', `Você mencionou ${mentionedUser.name || mentionedUser.email}`);
+  };
+
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          // Adicionar a imagem aos arquivos selecionados
+          setSelectedFiles(prev => [...prev, file]);
+          notify.success('Imagem colada', 'Imagem adicionada aos anexos!');
+        }
+      }
+    }
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredComentarios(comentarios);
+      return;
+    }
+
+    const filtered = comentarios.filter(comentario => 
+      comentario.texto.toLowerCase().includes(query.toLowerCase()) ||
+      (userNames[comentario.user_id] && userNames[comentario.user_id].toLowerCase().includes(query.toLowerCase()))
+    );
+    
+    setFilteredComentarios(filtered);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setFilteredComentarios(comentarios);
+  };
+
   const handleSubmitComentario = async (e) => {
     e.preventDefault();
     if (!novoComentario.trim() && selectedFiles.length === 0) return;
@@ -137,6 +214,7 @@ export default function ComentariosSection({ demandaId }) {
       console.log('Comentário criado:', comentario);
       if (comentario) {
         setComentarios(prev => [...prev, comentario]);
+        setFilteredComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
         setSelectedFiles([]);
         
@@ -145,10 +223,13 @@ export default function ComentariosSection({ demandaId }) {
           ...prev,
           [user.id]: user?.user_metadata?.full_name || user?.email
         }));
+
+        // Notificação de sucesso
+        notify.success('Comentário adicionado', 'Seu comentário foi publicado com sucesso!');
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
-      alert('Erro ao adicionar comentário: ' + error.message);
+      notify.error('Erro ao adicionar comentário', error.message || 'Ocorreu um erro inesperado');
     }
     setIsSubmitting(false);
   };
@@ -269,19 +350,31 @@ export default function ComentariosSection({ demandaId }) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          Comentários ({comentarios.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Comentários ({searchQuery ? filteredComentarios.length : comentarios.length})
+          </CardTitle>
+          <div className="w-64">
+            <SearchInput
+              placeholder="Buscar comentários..."
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Formulário para novo comentário */}
         <form onSubmit={handleSubmitComentario} className="space-y-3">
-          <Textarea
-            placeholder="Adicione um comentário... Use @usuario para mencionar alguém"
+          <MentionInput
+            placeholder="Adicione um comentário... Use @usuario para mencionar alguém ou Ctrl+V para colar imagens"
             value={novoComentario}
-            onChange={(e) => setNovoComentario(e.target.value)}
-            className="min-h-[80px] resize-none"
+            onChange={setNovoComentario}
+            users={availableUsers}
+            onMention={handleMention}
+            onPaste={handlePaste}
+            className="min-h-[80px]"
             disabled={isSubmitting}
           />
           
@@ -307,20 +400,14 @@ export default function ComentariosSection({ demandaId }) {
             
             {/* Lista de arquivos selecionados */}
             {selectedFiles.length > 0 && (
-              <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between bg-slate-100 p-2 rounded text-sm">
-                    <span className="truncate">{file.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <ImagePreview
+                    key={index}
+                    file={file}
+                    onRemove={() => removeFile(index)}
+                    className="w-full"
+                  />
                 ))}
               </div>
             )}
@@ -349,14 +436,14 @@ export default function ComentariosSection({ demandaId }) {
                 </div>
               ))}
             </div>
-          ) : comentarios.length === 0 ? (
+          ) : (searchQuery ? filteredComentarios : comentarios).length === 0 ? (
             <div className="text-center py-8 text-slate-500">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+              <p>{searchQuery ? 'Nenhum comentário encontrado para sua busca.' : 'Nenhum comentário ainda. Seja o primeiro a comentar!'}</p>
             </div>
           ) : (
             <AnimatePresence>
-              {comentarios.map((comentario) => (
+              {(searchQuery ? filteredComentarios : comentarios).map((comentario) => (
                 <motion.div
                   key={comentario.id}
                   initial={{ opacity: 0, y: 10 }}

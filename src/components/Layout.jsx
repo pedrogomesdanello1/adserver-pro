@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { LayoutDashboard, Plus, Users, Settings, Activity } from "lucide-react";
+import { LayoutDashboard, Plus, Users, Settings, Activity, Bell } from "lucide-react";
+import { useNotifications } from "@/context/NotificationContext";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +33,7 @@ const navigationItems = [
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
+  const { notifications, notify } = useNotifications();
 
   return (
     <SidebarProvider>
@@ -121,9 +123,24 @@ export default function Layout({ children, currentPageName }) {
 
         <main className="flex-1 flex flex-col">
           <header className="bg-white border-b border-slate-200 px-6 py-4 md:hidden">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
-              <h1 className="text-xl font-bold text-slate-900">AdServer Pro</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
+                <h1 className="text-xl font-bold text-slate-900">AdServer Pro</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => notify.info('Notificações', 'Sistema de notificações ativo!')}
+                  className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors duration-200"
+                >
+                  <Bell className="w-5 h-5 text-slate-600" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </header>
 
