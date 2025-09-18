@@ -15,6 +15,7 @@ import { useNotifications } from "@/context/NotificationContext";
 import NotificationPopup from "@/components/ui/NotificationPopup";
 import { Notificacao } from "@/entities/Notificacao";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function Dashboard() {
     responsavel_designado: "todos"
   });
   const [demandaSelecionada, setDemandaSelecionada] = useState(null);
+  const [demandaDetails, setDemandaDetails] = useState(null);
 
   useEffect(() => {
     loadDemandas();
@@ -81,6 +83,31 @@ export default function Dashboard() {
       console.error("Erro ao carregar demandas:", error);
     }
     setIsLoading(false);
+  };
+
+  // Carregar detalhes da demanda (criador e editor)
+  const loadDemandaDetails = async (demanda) => {
+    try {
+      const { data, error } = await supabase
+        .from('demandas')
+        .select(`
+          *,
+          profile:profiles!user_id(id, email, raw_user_meta_data),
+          last_editor:profiles!last_edited_by(id, email, raw_user_meta_data)
+        `)
+        .eq('id', demanda.id)
+        .single();
+
+      if (error) {
+        console.error('Erro ao carregar detalhes da demanda:', error);
+        setDemandaDetails(demanda); // Fallback para dados básicos
+      } else {
+        setDemandaDetails(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar detalhes da demanda:', error);
+      setDemandaDetails(demanda); // Fallback para dados básicos
+    }
   };
 
   const handleStatusChange = async (demandaId, novoStatus) => {
@@ -216,7 +243,10 @@ export default function Dashboard() {
                       demanda={demanda}
                       onStatusChange={handleStatusChange}
                       onDelete={handleDeleteDemanda}
-                      onSelect={() => setDemandaSelecionada(demanda)}
+                      onSelect={() => {
+                        setDemandaSelecionada(demanda);
+                        loadDemandaDetails(demanda);
+                      }}
                       onUpdate={(updatedDemanda) => {
                         setDemandas(prev => prev.map(d => d.id === updatedDemanda.id ? updatedDemanda : d));
                       }}
@@ -245,8 +275,8 @@ export default function Dashboard() {
                 <div className="bg-slate-50 p-4 rounded-lg">
                   <h5 className="font-medium text-slate-700 mb-2">Criado por</h5>
                   <p className="text-slate-600">
-                    {demandaSelecionada?.profile?.raw_user_meta_data?.full_name || 
-                     demandaSelecionada?.profile?.email || 
+                    {demandaDetails?.profile?.raw_user_meta_data?.full_name || 
+                     demandaDetails?.profile?.email || 
                      'Usuário não encontrado'}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
@@ -258,8 +288,8 @@ export default function Dashboard() {
                   <div className="bg-amber-50 p-4 rounded-lg">
                     <h5 className="font-medium text-slate-700 mb-2">Última edição</h5>
                     <p className="text-slate-600">
-                      {demandaSelecionada?.last_editor?.raw_user_meta_data?.full_name || 
-                       demandaSelecionada?.last_editor?.email || 
+                      {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
+                       demandaDetails?.last_editor?.email || 
                        'Usuário não encontrado'}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">

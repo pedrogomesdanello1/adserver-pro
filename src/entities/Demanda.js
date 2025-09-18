@@ -11,9 +11,7 @@ export const Demanda = {
       .from('demandas')
       .select(`
         *, 
-        comentarios_count:comentarios(count),
-        profile:profiles!user_id(id, email, raw_user_meta_data),
-        last_editor:profiles!last_edited_by(id, email, raw_user_meta_data)
+        comentarios_count:comentarios(count)
       `)
       .order('created_at', { ascending: false });
       
