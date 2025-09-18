@@ -20,6 +20,7 @@ export default function ComentariosSection({ demandaId }) {
   const [editingComment, setEditingComment] = useState(null);
   const [editText, setEditText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [userNames, setUserNames] = useState({});
 
   useEffect(() => {
     if (demandaId) {
@@ -78,10 +79,38 @@ export default function ComentariosSection({ demandaId }) {
     try {
       const data = await Demanda.getComentarios(demandaId);
       setComentarios(data);
+      
+      // Buscar nomes dos usuários únicos
+      const userIds = [...new Set(data.map(c => c.user_id))];
+      await loadUserNames(userIds);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
     }
     setIsLoading(false);
+  };
+
+  const loadUserNames = async (userIds) => {
+    try {
+      // Buscar nomes dos usuários da tabela profiles
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, email, raw_user_meta_data')
+        .in('id', userIds);
+      
+      if (error) {
+        console.error('Erro ao buscar perfis:', error);
+        return;
+      }
+      
+      const nameMap = {};
+      profiles.forEach(profile => {
+        nameMap[profile.id] = profile.raw_user_meta_data?.name || profile.email;
+      });
+      
+      setUserNames(nameMap);
+    } catch (error) {
+      console.error('Erro ao buscar nomes:', error);
+    }
   };
 
   const handleSubmitComentario = async (e) => {
@@ -110,6 +139,12 @@ export default function ComentariosSection({ demandaId }) {
         setComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
         setSelectedFiles([]);
+        
+        // Adicionar nome do usuário atual ao mapa
+        setUserNames(prev => ({
+          ...prev,
+          [user.id]: user?.user_metadata?.full_name || user?.email
+        }));
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -336,9 +371,10 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 text-sm">
-                          {comentario.user_id === user?.id 
-                            ? (user?.user_metadata?.full_name || user?.email || `Usuário ${comentario.user_id?.slice(0, 8)}...`)
-                            : `Usuário ${comentario.user_id?.slice(0, 8)}...`
+                          {userNames[comentario.user_id] || 
+                           (comentario.user_id === user?.id 
+                             ? (user?.user_metadata?.full_name || user?.email || `Usuário ${comentario.user_id?.slice(0, 8)}...`)
+                             : `Usuário ${comentario.user_id?.slice(0, 8)}...`)
                           }
                         </p>
                         <p className="text-xs text-slate-500">
