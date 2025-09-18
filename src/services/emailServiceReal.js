@@ -4,7 +4,8 @@ class EmailServiceReal {
   constructor() {
     // Substitua pela sua API key do Resend
     this.apiKey = import.meta.env.VITE_RESEND_API_KEY || 're_1234567890';
-    this.fromEmail = 'noreply@seudominio.com'; // Substitua pelo seu domínio
+    // Usar domínio de teste do Resend (não precisa configurar domínio próprio)
+    this.fromEmail = 'onboarding@resend.dev';
   }
 
   // Enviar email real usando Resend
