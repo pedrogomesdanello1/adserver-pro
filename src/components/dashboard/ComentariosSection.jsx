@@ -38,15 +38,24 @@ export default function ComentariosSection({ demandaId }) {
     e.preventDefault();
     if (!novoComentario.trim()) return;
 
+    console.log('Tentando enviar comentário:', {
+      demandaId,
+      texto: novoComentario.trim(),
+      userId: user?.id,
+      user: user
+    });
+
     setIsSubmitting(true);
     try {
       const comentario = await Demanda.addComentario(demandaId, novoComentario.trim(), user.id);
+      console.log('Comentário criado:', comentario);
       if (comentario) {
         setComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
+      alert('Erro ao adicionar comentário: ' + error.message);
     }
     setIsSubmitting(false);
   };

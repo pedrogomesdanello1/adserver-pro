@@ -18,10 +18,14 @@ export const Comentario = {
 
   // Criar novo comentário
   create: async (novoComentario) => {
+    console.log('Comentario.create - Dados recebidos:', novoComentario);
+    
     const { data, error } = await supabase
       .from('comentarios')
       .insert([novoComentario])
       .select('*, profile:profiles ( id, email, raw_user_meta_data )');
+
+    console.log('Comentario.create - Resposta do Supabase:', { data, error });
 
     if (error) {
       console.error("Erro ao criar comentário:", error);
