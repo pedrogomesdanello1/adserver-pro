@@ -20,7 +20,6 @@ export default function ComentariosSection({ demandaId }) {
   const [editingComment, setEditingComment] = useState(null);
   const [editText, setEditText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [userEmails, setUserEmails] = useState({});
 
   useEffect(() => {
     if (demandaId) {
@@ -79,30 +78,10 @@ export default function ComentariosSection({ demandaId }) {
     try {
       const data = await Demanda.getComentarios(demandaId);
       setComentarios(data);
-      
-      // Buscar emails dos usuários únicos
-      const userIds = [...new Set(data.map(c => c.user_id))];
-      await loadUserEmails(userIds);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
     }
     setIsLoading(false);
-  };
-
-  const loadUserEmails = async (userIds) => {
-    try {
-      // Solução simples: usar apenas o usuário atual por enquanto
-      const emailMap = {};
-      
-      // Adicionar o usuário atual se estiver na lista
-      if (user?.id && user?.email && userIds.includes(user.id)) {
-        emailMap[user.id] = user.email;
-      }
-      
-      setUserEmails(emailMap);
-    } catch (error) {
-      console.error('Erro ao buscar emails:', error);
-    }
   };
 
   const handleSubmitComentario = async (e) => {
@@ -131,12 +110,6 @@ export default function ComentariosSection({ demandaId }) {
         setComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
         setSelectedFiles([]);
-        
-        // Adicionar email do usuário atual ao mapa
-        setUserEmails(prev => ({
-          ...prev,
-          [user.id]: user.email
-        }));
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -363,7 +336,9 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 text-sm">
-                          {userEmails[comentario.user_id] || `Usuário ${comentario.user_id?.slice(0, 8)}...`}
+                          {comentario.profile?.raw_user_meta_data?.name || 
+                           comentario.profile?.email || 
+                           `Usuário ${comentario.user_id?.slice(0, 8)}...`}
                         </p>
                         <p className="text-xs text-slate-500">
                           {formatDateSafely(comentario.created_at)}
