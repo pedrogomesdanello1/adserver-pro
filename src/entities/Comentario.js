@@ -5,7 +5,7 @@ export const Comentario = {
   listByDemanda: async (demandaId) => {
     const { data, error } = await supabase
       .from('comentarios')
-      .select('*, profile:profiles ( id, email, raw_user_meta_data )')
+      .select('*')
       .eq('demanda_id', demandaId)
       .order('created_at', { ascending: true });
       
@@ -23,7 +23,7 @@ export const Comentario = {
     const { data, error } = await supabase
       .from('comentarios')
       .insert([novoComentario])
-      .select('*, profile:profiles ( id, email, raw_user_meta_data )');
+      .select('*');
 
     console.log('Comentario.create - Resposta do Supabase:', { data, error });
 
@@ -54,7 +54,7 @@ export const Comentario = {
       .from('comentarios')
       .update(updates)
       .eq('id', id)
-      .select('*, profile:profiles ( id, email, raw_user_meta_data )');
+      .select('*');
 
     if (error) {
       console.error("Erro ao atualizar comentário:", error);
