@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import DemandaCard from "../components/dashboard/DemandaCard";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
 import ComentariosSection from "../components/dashboard/ComentariosSection";
+import StatusCards from "../components/dashboard/StatusCards";
 import { useNotifications } from "@/context/NotificationContext";
 import NotificationPopup from "@/components/ui/NotificationPopup";
 import { Notificacao } from "@/entities/Notificacao";
@@ -38,6 +39,7 @@ export default function Dashboard() {
   });
   const [demandaSelecionada, setDemandaSelecionada] = useState(null);
   const [demandaDetails, setDemandaDetails] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   useEffect(() => {
     loadDemandas();
@@ -154,6 +156,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleStatusClick = (status) => {
+    if (selectedStatus === status) {
+      setSelectedStatus('');
+      setFiltros(prev => ({ ...prev, status: 'todos' }));
+    } else {
+      setSelectedStatus(status);
+      setFiltros(prev => ({ ...prev, status }));
+    }
+  };
+
   const handleFiltroChange = (tipo, valor) => {
     setFiltros(prev => ({ ...prev, [tipo]: valor }));
   };
@@ -218,6 +230,11 @@ export default function Dashboard() {
 
         {/* -- Seção dos Status Cards -- */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <StatusCards 
+            demandas={demandas}
+            onStatusClick={handleStatusClick}
+            selectedStatus={selectedStatus}
+          />
         </motion.div>
 
         {/* -- Seção dos Filtros -- */}

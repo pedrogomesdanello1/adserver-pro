@@ -74,8 +74,7 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
     return format(date, formatPattern, { locale: ptBR });
   };
 
-  // Como não temos mais coluna status, usar sempre pendente_visualizacao
-  const statusInfo = statusConfig['pendente_visualizacao'];
+  const statusInfo = statusConfig[demanda.status] || statusConfig['pendente_visualizacao'];
   const StatusIcon = statusInfo.icon;
 
   // Carregar dados do responsável
@@ -227,7 +226,28 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
               />
             </div>
             
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Status</label>
+                <Select
+                  value={editData.status || demanda.status || 'pendente_visualizacao'}
+                  onValueChange={(value) => setEditData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(statusConfig).map(([status, config]) => (
+                      <SelectItem key={status} value={status}>
+                        <div className="flex items-center gap-2">
+                          <config.icon className={`w-4 h-4 ${config.color}`} />
+                          {config.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1 block">Prioridade</label>
