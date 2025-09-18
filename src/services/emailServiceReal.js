@@ -8,9 +8,10 @@ class EmailServiceReal {
     this.fromEmail = 'onboarding@resend.dev';
     
     // Debug da API key
-    console.log('API Key carregada:', this.apiKey ? 'SIM' : 'NÃO');
-    console.log('API Key completa:', this.apiKey);
-    console.log('Variável de ambiente:', import.meta.env.VITE_RESEND_API_KEY);
+    console.log('🔑 API Key carregada:', this.apiKey ? 'SIM' : 'NÃO');
+    console.log('🔑 API Key completa:', this.apiKey);
+    console.log('🔑 Variável de ambiente:', import.meta.env.VITE_RESEND_API_KEY);
+    console.log('🔑 Timestamp:', new Date().toISOString());
   }
 
   // Enviar email com fallback para simulação
