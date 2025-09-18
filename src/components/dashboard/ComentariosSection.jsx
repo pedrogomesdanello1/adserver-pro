@@ -91,21 +91,13 @@ export default function ComentariosSection({ demandaId }) {
 
   const loadUserEmails = async (userIds) => {
     try {
-      // Buscar emails dos usuários usando a tabela auth.users
-      const { data: users, error } = await supabase
-        .from('auth.users')
-        .select('id, email')
-        .in('id', userIds);
-      
-      if (error) {
-        console.error('Erro ao buscar usuários:', error);
-        return;
-      }
-      
+      // Solução simples: usar apenas o usuário atual por enquanto
       const emailMap = {};
-      users.forEach(user => {
+      
+      // Adicionar o usuário atual se estiver na lista
+      if (user?.id && user?.email && userIds.includes(user.id)) {
         emailMap[user.id] = user.email;
-      });
+      }
       
       setUserEmails(emailMap);
     } catch (error) {
