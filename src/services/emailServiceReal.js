@@ -27,17 +27,20 @@ class EmailServiceReal {
   // Enviar email com fallback para simulação
   async sendEmail({ to, subject, html }) {
     try {
+      // Carregar API key dinamicamente para evitar problemas de timing
+      const dynamicApiKey = import.meta.env.VITE_RESEND_API_KEY || 're_1234567890';
+      
       console.log('=== INICIANDO ENVIO DE EMAIL ===');
       console.log('Para:', to);
       console.log('Assunto:', subject);
-      console.log('API Key (primeiros 10 chars):', this.apiKey.substring(0, 10) + '...');
-      console.log('🔍 API Key completa no sendEmail:', this.apiKey);
+      console.log('🔍 API Key do constructor:', this.apiKey);
+      console.log('🔍 API Key dinâmica:', dynamicApiKey);
       console.log('🔍 Variável env no sendEmail:', import.meta.env.VITE_RESEND_API_KEY);
-      console.log('🔍 this.apiKey === import.meta.env.VITE_RESEND_API_KEY:', this.apiKey === import.meta.env.VITE_RESEND_API_KEY);
+      console.log('🔍 Usando API key dinâmica:', dynamicApiKey.substring(0, 10) + '...');
 
-      // Verificar se a API key é válida (não é a de exemplo)
-      if (this.apiKey === 're_1234567890' || !this.apiKey.startsWith('re_')) {
-        console.log('⚠️ API Key inválida ou de exemplo detectada');
+      // Verificar se a API key dinâmica é válida (não é a de exemplo)
+      if (dynamicApiKey === 're_1234567890' || !dynamicApiKey.startsWith('re_')) {
+        console.log('⚠️ API Key dinâmica inválida ou de exemplo detectada');
         console.log('=== FALLBACK: EMAIL SIMULADO ===');
         console.log(`📧 Email seria enviado para: ${to}`);
         console.log(`📝 Assunto: ${subject}`);
@@ -66,12 +69,12 @@ class EmailServiceReal {
 
       console.log('Dados do email:', emailData);
 
-      // Tentar envio direto (pode falhar por CORS)
+      // Tentar envio direto usando API key dinâmica (pode falhar por CORS)
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${dynamicApiKey}`,
         },
         body: JSON.stringify(emailData),
       });
