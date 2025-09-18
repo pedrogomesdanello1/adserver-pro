@@ -91,7 +91,12 @@ export default function ComentariosSection({ demandaId }) {
 
   const loadUserEmails = async (userIds) => {
     try {
-      const { data: users, error } = await supabase.auth.admin.listUsers();
+      // Buscar emails dos usuários usando a tabela auth.users
+      const { data: users, error } = await supabase
+        .from('auth.users')
+        .select('id, email')
+        .in('id', userIds);
+      
       if (error) {
         console.error('Erro ao buscar usuários:', error);
         return;
@@ -99,9 +104,7 @@ export default function ComentariosSection({ demandaId }) {
       
       const emailMap = {};
       users.forEach(user => {
-        if (userIds.includes(user.id)) {
-          emailMap[user.id] = user.email;
-        }
+        emailMap[user.id] = user.email;
       });
       
       setUserEmails(emailMap);
