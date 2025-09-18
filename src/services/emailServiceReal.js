@@ -11,29 +11,46 @@ class EmailServiceReal {
   // Enviar email real usando Resend
   async sendEmail({ to, subject, html }) {
     try {
+      console.log('=== INICIANDO ENVIO DE EMAIL ===');
+      console.log('Para:', to);
+      console.log('Assunto:', subject);
+      console.log('De:', this.fromEmail);
+      console.log('API Key (primeiros 10 chars):', this.apiKey.substring(0, 10) + '...');
+
+      const emailData = {
+        from: this.fromEmail,
+        to: [to],
+        subject,
+        html,
+      };
+
+      console.log('Dados do email:', emailData);
+
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`,
         },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: [to],
-          subject,
-          html,
-        }),
+        body: JSON.stringify(emailData),
       });
 
+      console.log('Status da resposta:', response.status);
+      console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`Erro ao enviar email: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Erro na resposta:', errorText);
+        throw new Error(`Erro ao enviar email: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       console.log('Email enviado com sucesso:', data);
+      console.log('=== EMAIL ENVIADO COM SUCESSO ===');
       return { success: true, data };
     } catch (error) {
-      console.error('Erro ao enviar email:', error);
+      console.error('=== ERRO AO ENVIAR EMAIL ===');
+      console.error('Erro completo:', error);
       return { success: false, error: error.message };
     }
   }
@@ -67,30 +84,44 @@ class EmailServiceReal {
         }
       }
 
-      // Coletar destinatários
+      // Coletar destinatários - NOTIFICAR TODOS OS USUÁRIOS CADASTRADOS
       const destinatarios = new Set();
       
-      // Adicionar responsável da demanda
-      if (responsavelEmail) {
-        destinatarios.add(responsavelEmail);
+      // Buscar TODOS os usuários cadastrados no sistema
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('email')
+        .not('email', 'is', null);
+
+      if (!usersError && allUsers) {
+        allUsers.forEach(user => {
+          if (user.email) {
+            destinatarios.add(user.email);
+          }
+        });
       }
 
-      // Adicionar usuários mencionados
+      // Adicionar usuários mencionados (se houver)
       mentionedUsers.forEach(user => {
         if (user.email) {
           destinatarios.add(user.email);
         }
       });
 
+      console.log(`Total de destinatários encontrados: ${destinatarios.size}`);
+      console.log('Destinatários:', Array.from(destinatarios));
+
       // Enviar emails
       const results = [];
       for (const email of destinatarios) {
+        console.log(`Enviando email para: ${email}`);
         const result = await this.sendEmail({
           to: email,
           subject: `Novo comentário na demanda: ${demanda.titulo}`,
           html: this.generateCommentEmailHTML(demanda.titulo, comentario.texto, comentario.user_id)
         });
         results.push({ email, result });
+        console.log(`Resultado para ${email}:`, result);
       }
 
       console.log(`Emails enviados para: ${Array.from(destinatarios).join(', ')}`);
@@ -129,6 +160,8 @@ class EmailServiceReal {
         return { success: false, error: 'Responsável não encontrado' };
       }
 
+      console.log(`Enviando notificação de atribuição para: ${responsavel.email}`);
+
       // Enviar email
       const result = await this.sendEmail({
         to: responsavel.email,
@@ -136,6 +169,7 @@ class EmailServiceReal {
         html: this.generateAssignmentEmailHTML(demanda.titulo, responsavel.raw_user_meta_data?.name || responsavel.email)
       });
 
+      console.log(`Resultado da notificação de atribuição:`, result);
       console.log(`Notificação de atribuição enviada para: ${responsavel.email}`);
       return { success: true, destinatario: responsavel.email, result };
 
