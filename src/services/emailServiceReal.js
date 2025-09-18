@@ -7,11 +7,21 @@ class EmailServiceReal {
     // Usar domínio de teste do Resend (não precisa configurar domínio próprio)
     this.fromEmail = 'onboarding@resend.dev';
     
-    // Debug da API key
+    // Debug da API key - FORÇAR CACHE BREAK
     console.log('🔑 API Key carregada:', this.apiKey ? 'SIM' : 'NÃO');
     console.log('🔑 API Key completa:', this.apiKey);
     console.log('🔑 Variável de ambiente:', import.meta.env.VITE_RESEND_API_KEY);
     console.log('🔑 Timestamp:', new Date().toISOString());
+    console.log('🔑 CACHE BREAK:', Math.random().toString(36).substring(7));
+    
+    // Verificar se API key é válida
+    if (this.apiKey === 're_1234567890' || !this.apiKey.startsWith('re_')) {
+      console.error('🚨 API KEY INVÁLIDA DETECTADA NO CONSTRUCTOR!');
+      console.error('🚨 Valor atual:', this.apiKey);
+      console.error('🚨 Variável env:', import.meta.env.VITE_RESEND_API_KEY);
+    } else {
+      console.log('✅ API KEY VÁLIDA DETECTADA NO CONSTRUCTOR!');
+    }
   }
 
   // Enviar email com fallback para simulação
@@ -21,6 +31,9 @@ class EmailServiceReal {
       console.log('Para:', to);
       console.log('Assunto:', subject);
       console.log('API Key (primeiros 10 chars):', this.apiKey.substring(0, 10) + '...');
+      console.log('🔍 API Key completa no sendEmail:', this.apiKey);
+      console.log('🔍 Variável env no sendEmail:', import.meta.env.VITE_RESEND_API_KEY);
+      console.log('🔍 this.apiKey === import.meta.env.VITE_RESEND_API_KEY:', this.apiKey === import.meta.env.VITE_RESEND_API_KEY);
 
       // Verificar se a API key é válida (não é a de exemplo)
       if (this.apiKey === 're_1234567890' || !this.apiKey.startsWith('re_')) {
