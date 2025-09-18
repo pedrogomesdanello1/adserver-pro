@@ -336,9 +336,7 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 text-sm">
-                          {comentario.user?.raw_user_meta_data?.full_name || 
-                           comentario.user?.email?.split('@')[0] || 
-                           `Usuário ${comentario.user_id?.slice(0, 8)}...`}
+                          Usuário {comentario.user_id?.slice(0, 8)}...
                         </p>
                         <p className="text-xs text-slate-500">
                           {formatDateSafely(comentario.created_at)}
