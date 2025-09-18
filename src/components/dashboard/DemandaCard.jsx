@@ -39,6 +39,7 @@ import ResponsibleSelector from "@/components/ui/ResponsibleSelector";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import UrgentTimer from "@/components/ui/UrgentTimer";
 
 const statusConfig = {
   pendente_visualizacao: { icon: Clock, color: "text-amber-700", bgColor: "bg-amber-100", label: "Pendente" },
@@ -274,7 +275,9 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-full">
+      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-full ${
+        demanda.prioridade === 'urgente' ? 'urgent-pulse border-red-200' : ''
+      }`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 flex flex-col gap-2">
@@ -365,8 +368,14 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
               )}
               {demanda.prazo_estimado && (
                 <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDateSafely(demanda.prazo_estimado, "dd/MM")}</span>
+                  {demanda.prioridade === 'urgente' ? (
+                    <UrgentTimer createdAt={demanda.created_at} />
+                  ) : (
+                    <>
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatDateSafely(demanda.prazo_estimado, "dd/MM")}</span>
+                    </>
+                  )}
                 </div>
               )}
             </div>

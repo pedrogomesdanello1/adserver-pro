@@ -14,9 +14,12 @@ import { motion } from "framer-motion";
 import { CreatableSelect } from "@/components/ui/CreatableSelect";
 import { useAuth } from '../context/AuthContext';
 import ResponsibleSelector from '@/components/ui/ResponsibleSelector';
+import { emailService } from '@/services/emailService';
+import { useNotifications } from '@/context/NotificationContext';
 
 export default function NovaDemanda() {
   const { user } = useAuth(); 
+  const { notify } = useNotifications();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -52,7 +55,6 @@ export default function NovaDemanda() {
   }, []);
 
   const handleInputChange = (campo, valor) => {
-    console.log('NovaDemanda: handleInputChange', campo, valor);
     if (campo === 'agencia') {
         if (valor && !agencias.some(a => a.value === valor)) {
             setAgencias(prev => [...prev, { value: valor, label: valor }]);
@@ -63,6 +65,9 @@ export default function NovaDemanda() {
             setClientes(prev => [...prev, { value: valor, label: valor }]);
         }
         setFormData(prev => ({ ...prev, cliente_final: valor }));
+    } else if (campo === 'prazo_estimado') {
+        // Corrigir problema de fuso horário - manter a data como está
+        setFormData(prev => ({ ...prev, [campo]: valor }));
     } else {
         setFormData(prev => ({ ...prev, [campo]: valor }));
     }
@@ -80,7 +85,23 @@ export default function NovaDemanda() {
     setIsLoading(true);
     try {
       const dadosParaEnviar = { ...formData, user_id: user.id };
-      await Demanda.create(dadosParaEnviar);
+      const novaDemanda = await Demanda.create(dadosParaEnviar);
+      
+      // Enviar notificação por email se houver responsável
+      if (formData.responsavel_designado && novaDemanda) {
+        try {
+          console.log('Enviando notificação de nova demanda...');
+          const emailResult = await emailService.notifyDemandaAssigned(novaDemanda.id, formData.responsavel_designado);
+          console.log('Resultado do email:', emailResult);
+          
+          if (emailResult && emailResult.success) {
+            notify.info('Notificação enviada', 'Email enviado para o responsável');
+          }
+        } catch (error) {
+          console.error('Erro ao enviar notificação por email:', error);
+        }
+      }
+      
       navigate("/"); 
     } catch (error) {
       console.error("Erro ao criar demanda:", error);

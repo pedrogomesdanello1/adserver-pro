@@ -54,7 +54,6 @@ const ResponsibleSelector = ({
   const selectedUser = users.find(user => user.id === value);
 
   const handleSelect = (user) => {
-    console.log('ResponsibleSelector: Selecionando usuário', user);
     onChange(user.id);
     setIsOpen(false);
     setSearchQuery('');

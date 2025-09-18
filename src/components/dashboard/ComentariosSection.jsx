@@ -249,11 +249,17 @@ export default function ComentariosSection({ demandaId }) {
 
         // Enviar notificação por email
         try {
+          console.log('Tentando enviar notificação por email...');
           const mentionedUsers = extractMentionedUsers(novoComentario);
-          const emailResult = await emailService.notifyCommentAdded(demandaId, comentario, mentionedUsers);
+          console.log('Usuários mencionados:', mentionedUsers);
           
-          if (emailResult.success && emailResult.destinatarios.length > 0) {
+          const emailResult = await emailService.notifyCommentAdded(demandaId, comentario, mentionedUsers);
+          console.log('Resultado do email:', emailResult);
+          
+          if (emailResult && emailResult.success && emailResult.destinatarios && emailResult.destinatarios.length > 0) {
             notify.info('Notificações enviadas', `Emails enviados para ${emailResult.destinatarios.length} pessoa(s)`);
+          } else {
+            console.log('Nenhum destinatário para notificação');
           }
         } catch (error) {
           console.error('Erro ao enviar notificação por email:', error);

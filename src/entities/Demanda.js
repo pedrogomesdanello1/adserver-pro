@@ -23,9 +23,17 @@ export const Demanda = {
   },
 
   create: async (novaDemanda) => {
+    // Corrigir problema de fuso horário na data
+    const demandaParaInserir = { ...novaDemanda };
+    if (demandaParaInserir.prazo_estimado) {
+      // Garantir que a data seja tratada como string no formato correto
+      const data = new Date(demandaParaInserir.prazo_estimado + 'T00:00:00');
+      demandaParaInserir.prazo_estimado = data.toISOString().split('T')[0];
+    }
+    
     const { data, error } = await supabase
       .from('demandas')
-      .insert([novaDemanda])
+      .insert([demandaParaInserir])
       .select();
 
     if (error) {
