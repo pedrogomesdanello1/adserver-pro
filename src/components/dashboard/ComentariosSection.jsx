@@ -14,7 +14,6 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
-import { emailService } from '@/services/emailService';
 
 export default function ComentariosSection({ demandaId }) {
   const { user } = useAuth();
@@ -247,23 +246,6 @@ export default function ComentariosSection({ demandaId }) {
         // Notificação de sucesso
         notify.success('Comentário adicionado', 'Seu comentário foi publicado com sucesso!');
 
-        // Enviar notificação por email
-        try {
-          console.log('Tentando enviar notificação por email...');
-          const mentionedUsers = extractMentionedUsers(novoComentario);
-          console.log('Usuários mencionados:', mentionedUsers);
-          
-          const emailResult = await emailService.notifyCommentAdded(demandaId, comentario, mentionedUsers);
-          console.log('Resultado do email:', emailResult);
-          
-          if (emailResult && emailResult.success && emailResult.destinatarios && emailResult.destinatarios.length > 0) {
-            notify.info('Notificações enviadas', `Emails enviados para ${emailResult.destinatarios.length} pessoa(s)`);
-          } else {
-            console.log('Nenhum destinatário para notificação');
-          }
-        } catch (error) {
-          console.error('Erro ao enviar notificação por email:', error);
-        }
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);

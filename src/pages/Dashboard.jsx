@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format } from 'date-fns';
 import { ptBR } from "date-fns/locale";
-import StatusCards from "../components/dashboard/StatusCards";
 import DemandaCard from "../components/dashboard/DemandaCard";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
 import ComentariosSection from "../components/dashboard/ComentariosSection";
@@ -219,7 +218,6 @@ export default function Dashboard() {
 
         {/* -- Seção dos Status Cards -- */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <StatusCards demandas={demandasFiltradas} />
         </motion.div>
 
         {/* -- Seção dos Filtros -- */}

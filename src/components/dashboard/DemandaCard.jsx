@@ -34,7 +34,6 @@ import { Demanda } from "@/entities/Demanda";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationContext";
-import { emailService } from "@/services/emailService";
 import ResponsibleSelector from "@/components/ui/ResponsibleSelector";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,7 +74,8 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
     return format(date, formatPattern, { locale: ptBR });
   };
 
-  const statusInfo = statusConfig[demanda.status] || statusConfig['pendente_visualizacao'];
+  // Como não temos mais coluna status, usar sempre pendente_visualizacao
+  const statusInfo = statusConfig['pendente_visualizacao'];
   const StatusIcon = statusInfo.icon;
 
   // Carregar dados do responsável
@@ -150,17 +150,6 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       if (updatedDemanda) {
         notify.success('Demanda atualizada', 'As alterações foram salvas com sucesso!');
         
-        // Verificar se o responsável foi alterado
-        if (editData.responsavel_designado && editData.responsavel_designado !== demanda.responsavel_designado) {
-          try {
-            const emailResult = await emailService.notifyDemandaAssigned(demanda.id, editData.responsavel_designado);
-            if (emailResult.success) {
-              notify.info('Notificação enviada', `Email enviado para o responsável`);
-            }
-          } catch (error) {
-            console.error('Erro ao enviar notificação de atribuição:', error);
-          }
-        }
         
         setIsEditing(false);
         if (onUpdate) {
@@ -238,28 +227,7 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Status</label>
-                <Select
-                  value={editData.status || ''}
-                  onValueChange={(value) => setEditData(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(statusConfig).map(([status, config]) => (
-                      <SelectItem key={status} value={status}>
-                        <div className="flex items-center gap-2">
-                          <config.icon className={`w-4 h-4 ${config.color}`} />
-                          {config.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-1 gap-4">
               
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1 block">Prioridade</label>

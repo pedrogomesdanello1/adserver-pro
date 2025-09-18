@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 import { CreatableSelect } from "@/components/ui/CreatableSelect";
 import { useAuth } from '../context/AuthContext';
 import ResponsibleSelector from '@/components/ui/ResponsibleSelector';
-import { emailService } from '@/services/emailService';
 import { useNotifications } from '@/context/NotificationContext';
 
 export default function NovaDemanda() {
@@ -87,20 +86,6 @@ export default function NovaDemanda() {
       const dadosParaEnviar = { ...formData, user_id: user.id };
       const novaDemanda = await Demanda.create(dadosParaEnviar);
       
-      // Enviar notificação por email se houver responsável
-      if (formData.responsavel_designado && novaDemanda) {
-        try {
-          console.log('Enviando notificação de nova demanda...');
-          const emailResult = await emailService.notifyDemandaAssigned(novaDemanda.id, formData.responsavel_designado);
-          console.log('Resultado do email:', emailResult);
-          
-          if (emailResult && emailResult.success) {
-            notify.info('Notificação enviada', 'Email enviado para o responsável');
-          }
-        } catch (error) {
-          console.error('Erro ao enviar notificação por email:', error);
-        }
-      }
       
       navigate("/"); 
     } catch (error) {
