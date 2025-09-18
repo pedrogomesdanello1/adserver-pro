@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Demanda } from '@/entities/Demanda';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Send, Trash2, User } from 'lucide-react';
+import { MessageSquare, Send, Trash2, User, Edit2, Check, X, Paperclip, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,10 +17,59 @@ export default function ComentariosSection({ demandaId }) {
   const [novoComentario, setNovoComentario] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingComment, setEditingComment] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   useEffect(() => {
     if (demandaId) {
       loadComentarios();
+      
+      // Configurar notificações em tempo real
+      const channel = supabase
+        .channel(`comentarios-${demandaId}`)
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'comentarios',
+            filter: `demanda_id=eq.${demandaId}`
+          }, 
+          (payload) => {
+            console.log('Novo comentário recebido:', payload);
+            // Recarregar comentários quando um novo for adicionado
+            loadComentarios();
+          }
+        )
+        .on('postgres_changes', 
+          { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'comentarios',
+            filter: `demanda_id=eq.${demandaId}`
+          }, 
+          (payload) => {
+            console.log('Comentário atualizado:', payload);
+            loadComentarios();
+          }
+        )
+        .on('postgres_changes', 
+          { 
+            event: 'DELETE', 
+            schema: 'public', 
+            table: 'comentarios',
+            filter: `demanda_id=eq.${demandaId}`
+          }, 
+          (payload) => {
+            console.log('Comentário deletado:', payload);
+            loadComentarios();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [demandaId]);
 
@@ -36,22 +86,30 @@ export default function ComentariosSection({ demandaId }) {
 
   const handleSubmitComentario = async (e) => {
     e.preventDefault();
-    if (!novoComentario.trim()) return;
+    if (!novoComentario.trim() && selectedFiles.length === 0) return;
 
     console.log('Tentando enviar comentário:', {
       demandaId,
       texto: novoComentario.trim(),
       userId: user?.id,
-      user: user
+      user: user,
+      files: selectedFiles
     });
 
     setIsSubmitting(true);
     try {
-      const comentario = await Demanda.addComentario(demandaId, novoComentario.trim(), user.id);
+      // Upload dos arquivos se houver
+      let anexos = [];
+      if (selectedFiles.length > 0) {
+        anexos = await uploadFiles(selectedFiles);
+      }
+
+      const comentario = await Demanda.addComentario(demandaId, novoComentario.trim(), user.id, anexos);
       console.log('Comentário criado:', comentario);
       if (comentario) {
         setComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
+        setSelectedFiles([]);
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -73,11 +131,104 @@ export default function ComentariosSection({ demandaId }) {
     }
   };
 
+  const handleEditComentario = (comentario) => {
+    setEditingComment(comentario.id);
+    setEditText(comentario.texto);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editText.trim()) return;
+
+    try {
+      const updatedComment = await Demanda.updateComentario(editingComment, { texto: editText.trim() });
+      if (updatedComment) {
+        setComentarios(prev => prev.map(c => 
+          c.id === editingComment ? { ...c, texto: editText.trim() } : c
+        ));
+        setEditingComment(null);
+        setEditText('');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar comentário:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingComment(null);
+    setEditText('');
+  };
+
   const formatDateSafely = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return null;
     return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
+
+  // Função para processar menções (@usuario)
+  const processMentions = (text) => {
+    if (!text) return text;
+    
+    // Regex para encontrar menções @usuario
+    const mentionRegex = /@(\w+)/g;
+    
+    return text.split(mentionRegex).map((part, index) => {
+      if (index % 2 === 1) {
+        // Esta é uma menção
+        return (
+          <span key={index} className="bg-blue-100 text-blue-800 px-1 rounded text-xs font-medium">
+            @{part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Função para gerenciar anexos
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadFiles = async (files) => {
+    const uploadedFiles = [];
+    
+    for (const file of files) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `comentarios/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('anexos')
+          .upload(filePath, file);
+        
+        if (uploadError) {
+          console.error('Erro ao fazer upload:', uploadError);
+          continue;
+        }
+        
+        const { data } = supabase.storage
+          .from('anexos')
+          .getPublicUrl(filePath);
+        
+        uploadedFiles.push({
+          name: file.name,
+          url: data.publicUrl,
+          size: file.size,
+          type: file.type
+        });
+      } catch (error) {
+        console.error('Erro ao processar arquivo:', error);
+      }
+    }
+    
+    return uploadedFiles;
   };
 
   return (
@@ -92,17 +243,59 @@ export default function ComentariosSection({ demandaId }) {
         {/* Formulário para novo comentário */}
         <form onSubmit={handleSubmitComentario} className="space-y-3">
           <Textarea
-            placeholder="Adicione um comentário..."
+            placeholder="Adicione um comentário... Use @usuario para mencionar alguém"
             value={novoComentario}
             onChange={(e) => setNovoComentario(e.target.value)}
             className="min-h-[80px] resize-none"
             disabled={isSubmitting}
           />
+          
+          {/* Seção de anexos */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                id="file-input"
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+              />
+              <label
+                htmlFor="file-input"
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
+              >
+                <Paperclip className="w-4 h-4" />
+                Anexar arquivos
+              </label>
+            </div>
+            
+            {/* Lista de arquivos selecionados */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between bg-slate-100 p-2 rounded text-sm">
+                    <span className="truncate">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <div className="flex justify-end">
             <Button 
               type="submit" 
               size="sm" 
-              disabled={!novoComentario.trim() || isSubmitting}
+              disabled={(!novoComentario.trim() && selectedFiles.length === 0) || isSubmitting}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4 mr-2" />
@@ -143,7 +336,9 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 text-sm">
-                          Usuário {comentario.user_id?.slice(0, 8)}...
+                          {comentario.user?.raw_user_meta_data?.full_name || 
+                           comentario.user?.email?.split('@')[0] || 
+                           `Usuário ${comentario.user_id?.slice(0, 8)}...`}
                         </p>
                         <p className="text-xs text-slate-500">
                           {formatDateSafely(comentario.created_at)}
@@ -151,19 +346,85 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                     </div>
                     {comentario.user_id === user?.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteComentario(comentario.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditComentario(comentario)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteComentario(comentario.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  <p className="text-slate-700 text-sm whitespace-pre-wrap">
-                    {comentario.texto}
-                  </p>
+                  {editingComment === comentario.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="min-h-[80px] resize-none"
+                        placeholder="Edite seu comentário..."
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleSaveEdit}
+                          disabled={!editText.trim()}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Salvar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {comentario.texto && (
+                        <p className="text-slate-700 text-sm whitespace-pre-wrap">
+                          {processMentions(comentario.texto)}
+                        </p>
+                      )}
+                      
+                      {/* Exibir anexos se existirem */}
+                      {comentario.anexos && comentario.anexos.length > 0 && (
+                        <div className="space-y-1">
+                          {comentario.anexos.map((anexo, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded border">
+                              <Paperclip className="w-4 h-4 text-slate-500" />
+                              <span className="text-sm text-slate-700 truncate flex-1">
+                                {anexo.name}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => window.open(anexo.url, '_blank')}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

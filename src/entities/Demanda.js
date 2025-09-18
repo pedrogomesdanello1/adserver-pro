@@ -67,16 +67,21 @@ export const Demanda = {
     return await Comentario.listByDemanda(demandaId);
   },
 
-  addComentario: async (demandaId, texto, userId) => {
+  addComentario: async (demandaId, texto, userId, anexos = []) => {
     const novoComentario = {
       demanda_id: demandaId,
       texto: texto,
-      user_id: userId
+      user_id: userId,
+      anexos: anexos
     };
     return await Comentario.create(novoComentario);
   },
 
   deleteComentario: async (comentarioId) => {
     return await Comentario.delete(comentarioId);
+  },
+
+  updateComentario: async (comentarioId, updates) => {
+    return await Comentario.update(comentarioId, updates);
   }
 };

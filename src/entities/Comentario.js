@@ -5,7 +5,14 @@ export const Comentario = {
   listByDemanda: async (demandaId) => {
     const { data, error } = await supabase
       .from('comentarios')
-      .select('*')
+      .select(`
+        *,
+        user:auth.users!user_id (
+          id,
+          email,
+          raw_user_meta_data
+        )
+      `)
       .eq('demanda_id', demandaId)
       .order('created_at', { ascending: true });
       
@@ -23,7 +30,14 @@ export const Comentario = {
     const { data, error } = await supabase
       .from('comentarios')
       .insert([novoComentario])
-      .select('*');
+      .select(`
+        *,
+        user:auth.users!user_id (
+          id,
+          email,
+          raw_user_meta_data
+        )
+      `);
 
     console.log('Comentario.create - Resposta do Supabase:', { data, error });
 
