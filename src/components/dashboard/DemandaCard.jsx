@@ -14,7 +14,10 @@ import {
   Briefcase,
   Building,
   MessageSquareDashed,
-  MessageSquare
+  MessageSquare,
+  Edit2,
+  Save,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -26,6 +29,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { Demanda } from "@/entities/Demanda";
+import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
+import { emailService } from "@/services/emailService";
+import ResponsibleSelector from "@/components/ui/ResponsibleSelector";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const statusConfig = {
   pendente_visualizacao: { icon: Clock, color: "text-amber-700", bgColor: "bg-amber-100", label: "Pendente" },
@@ -45,7 +58,14 @@ const prioridadeConfig = {
   urgente: { color: "bg-red-100 text-red-800", label: "Urgente" }
 };
 
-export default function DemandaCard({ demanda, criador, onStatusChange, onDelete, onSelect }) {
+export default function DemandaCard({ demanda, criador, onStatusChange, onDelete, onSelect, onUpdate }) {
+  const { user } = useAuth();
+  const { notify } = useNotifications();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [responsibleUser, setResponsibleUser] = useState(null);
+
   const formatDateSafely = (dateString, formatPattern) => {
     if (!dateString) return null;
     const date = new Date(dateString);
@@ -56,9 +76,195 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
   const statusInfo = statusConfig[demanda.status];
   const StatusIcon = statusInfo.icon;
 
+  // Carregar dados do responsável
+  React.useEffect(() => {
+    if (demanda.responsavel_designado) {
+      loadResponsibleUser(demanda.responsavel_designado);
+    }
+  }, [demanda.responsavel_designado]);
+
+  const loadResponsibleUser = async (userId) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, email, raw_user_meta_data')
+        .eq('id', userId)
+        .single();
+      
+      if (profile && !error) {
+        setResponsibleUser({
+          id: profile.id,
+          name: profile.raw_user_meta_data?.name || 'Usuário',
+          email: profile.email
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar responsável:', error);
+    }
+  };
+
+  const handleEdit = () => {
+    setEditData({
+      titulo: demanda.titulo,
+      descricao: demanda.descricao,
+      status: demanda.status,
+      prioridade: demanda.prioridade,
+      responsavel_designado: demanda.responsavel_designado
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const updatedDemanda = await Demanda.update(demanda.id, editData);
+      if (updatedDemanda) {
+        notify.success('Demanda atualizada', 'As alterações foram salvas com sucesso!');
+        
+        // Verificar se o responsável foi alterado
+        if (editData.responsavel_designado && editData.responsavel_designado !== demanda.responsavel_designado) {
+          try {
+            const emailResult = await emailService.notifyDemandaAssigned(demanda.id, editData.responsavel_designado);
+            if (emailResult.success) {
+              notify.info('Notificação enviada', `Email enviado para o responsável`);
+            }
+          } catch (error) {
+            console.error('Erro ao enviar notificação de atribuição:', error);
+          }
+        }
+        
+        setIsEditing(false);
+        if (onUpdate) {
+          onUpdate(updatedDemanda);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar demanda:', error);
+      notify.error('Erro ao atualizar', error.message || 'Ocorreu um erro inesperado');
+    }
+    setIsSaving(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditData({});
+  };
+
   const handleMenuClick = (e) => {
     e.stopPropagation();
   };
+
+  if (isEditing) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        className="cursor-default"
+      >
+        <Card className="h-full border-blue-200 bg-blue-50/30">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-900">Editando Demanda</h3>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Título</label>
+              <Input
+                value={editData.titulo || ''}
+                onChange={(e) => setEditData(prev => ({ ...prev, titulo: e.target.value }))}
+                placeholder="Título da demanda"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Descrição</label>
+              <Textarea
+                value={editData.descricao || ''}
+                onChange={(e) => setEditData(prev => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Descrição da demanda"
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Status</label>
+                <Select
+                  value={editData.status || ''}
+                  onValueChange={(value) => setEditData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(statusConfig).map(([status, config]) => (
+                      <SelectItem key={status} value={status}>
+                        <div className="flex items-center gap-2">
+                          <config.icon className={`w-4 h-4 ${config.color}`} />
+                          {config.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Prioridade</label>
+                <Select
+                  value={editData.prioridade || ''}
+                  onValueChange={(value) => setEditData(prev => ({ ...prev, prioridade: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(prioridadeConfig).map(([prioridade, config]) => (
+                      <SelectItem key={prioridade} value={prioridade}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Responsável</label>
+              <ResponsibleSelector
+                value={editData.responsavel_designado}
+                onChange={(value) => setEditData(prev => ({ ...prev, responsavel_designado: value }))}
+                placeholder="Selecione um responsável"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -125,6 +331,13 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  onClick={(e) => { handleMenuClick(e); handleEdit(); }}
+                  className="flex items-center gap-2"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   onClick={(e) => { handleMenuClick(e); onDelete(demanda.id); }}
                   className="flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
                 >
@@ -144,10 +357,10 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
            </div>
           <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
-              {demanda.responsavel_designado && (
+              {responsibleUser && (
                 <div className="flex items-center gap-1">
                   <User className="w-4 h-4" />
-                  <span>{demanda.responsavel_designado}</span>
+                  <span>{responsibleUser.name}</span>
                 </div>
               )}
               {demanda.prazo_estimado && (
@@ -158,7 +371,11 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
               )}
             </div>
             <div className="text-xs">
-              {formatDateSafely(demanda.created_at, "dd/MM/yy")}
+              {demanda.updated_at && demanda.updated_at !== demanda.created_at ? (
+                <span className="text-amber-600">Editado {formatDateSafely(demanda.updated_at, "dd/MM/yy")}</span>
+              ) : (
+                formatDateSafely(demanda.created_at, "dd/MM/yy")
+              )}
             </div>
           </div>
         </CardContent>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Demanda } from "@/entities/Demanda";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Plus, RefreshCw, Paperclip } from "lucide-react";
+import { Plus, RefreshCw, Paperclip, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format } from 'date-fns';
@@ -11,9 +11,11 @@ import StatusCards from "../components/dashboard/StatusCards";
 import DemandaCard from "../components/dashboard/DemandaCard";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
 import ComentariosSection from "../components/dashboard/ComentariosSection";
+import { useNotifications } from "@/context/NotificationContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { notifications, notify } = useNotifications();
   const [demandas, setDemandas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [agenciasUnicas, setAgenciasUnicas] = useState([]);
@@ -111,9 +113,22 @@ export default function Dashboard() {
               <h1 className="text-3xl font-bold text-slate-900">Dashboard de Demandas</h1>
               <p className="text-slate-600 mt-2">Gerencie todas as solicitações em tempo real</p>
             </motion.div>
-
-            {/* Div da Direita (Botões) */}
-            <div className="flex gap-3">
+            
+            {/* Div da Direita (Ações) */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => notify.info('Notificações', 'Sistema de notificações ativo!')}
+                className="relative p-3 hover:bg-slate-100 rounded-lg transition-colors duration-200"
+              >
+                <Bell className="w-6 h-6 text-slate-600" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+              
+              <div className="flex gap-3">
               <Button variant="outline" onClick={loadDemandas} disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Atualizar
@@ -122,6 +137,7 @@ export default function Dashboard() {
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Demanda
               </Button>
+              </div>
             </div>
           </div>
 
@@ -175,6 +191,9 @@ export default function Dashboard() {
                       onStatusChange={handleStatusChange}
                       onDelete={handleDeleteDemanda}
                       onSelect={() => setDemandaSelecionada(demanda)}
+                      onUpdate={(updatedDemanda) => {
+                        setDemandas(prev => prev.map(d => d.id === updatedDemanda.id ? updatedDemanda : d));
+                      }}
                     />
                   ))}
                 </AnimatePresence>

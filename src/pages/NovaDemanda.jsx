@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 import { CreatableSelect } from "@/components/ui/CreatableSelect";
 import { useAuth } from '../context/AuthContext';
+import ResponsibleSelector from '@/components/ui/ResponsibleSelector';
 
 export default function NovaDemanda() {
   const { user } = useAuth(); 
@@ -257,11 +258,10 @@ export default function NovaDemanda() {
                   <Label htmlFor="responsavel_designado" className="text-slate-700 font-medium">
                     Responsável Designado
                   </Label>
-                  <Input
-                    id="responsavel_designado"
+                  <ResponsibleSelector
                     value={formData.responsavel_designado}
-                    onChange={(e) => handleInputChange("responsavel_designado", e.target.value)}
-                    placeholder="Nome do responsável (opcional)"
+                    onChange={(value) => handleInputChange("responsavel_designado", value)}
+                    placeholder="Selecione um responsável (opcional)"
                     className="mt-2"
                   />
                 </div>

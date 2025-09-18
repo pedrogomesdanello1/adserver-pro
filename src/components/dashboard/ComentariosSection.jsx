@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { emailService } from '@/services/emailService';
 
 export default function ComentariosSection({ demandaId }) {
   const { user } = useAuth();
@@ -190,6 +191,25 @@ export default function ComentariosSection({ demandaId }) {
     setFilteredComentarios(comentarios);
   };
 
+  const extractMentionedUsers = (text) => {
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    
+    while ((match = mentionRegex.exec(text)) !== null) {
+      const mentionedName = match[1];
+      const user = availableUsers.find(u => 
+        u.name?.toLowerCase().includes(mentionedName.toLowerCase()) ||
+        u.email?.toLowerCase().includes(mentionedName.toLowerCase())
+      );
+      if (user) {
+        mentions.push(user);
+      }
+    }
+    
+    return mentions;
+  };
+
   const handleSubmitComentario = async (e) => {
     e.preventDefault();
     if (!novoComentario.trim() && selectedFiles.length === 0) return;
@@ -226,6 +246,18 @@ export default function ComentariosSection({ demandaId }) {
 
         // Notificação de sucesso
         notify.success('Comentário adicionado', 'Seu comentário foi publicado com sucesso!');
+
+        // Enviar notificação por email
+        try {
+          const mentionedUsers = extractMentionedUsers(novoComentario);
+          const emailResult = await emailService.notifyCommentAdded(demandaId, comentario, mentionedUsers);
+          
+          if (emailResult.success && emailResult.destinatarios.length > 0) {
+            notify.info('Notificações enviadas', `Emails enviados para ${emailResult.destinatarios.length} pessoa(s)`);
+          }
+        } catch (error) {
+          console.error('Erro ao enviar notificação por email:', error);
+        }
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
