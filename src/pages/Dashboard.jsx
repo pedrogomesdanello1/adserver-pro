@@ -88,22 +88,45 @@ export default function Dashboard() {
   // Carregar detalhes da demanda (criador e editor)
   const loadDemandaDetails = async (demanda) => {
     try {
-      const { data, error } = await supabase
-        .from('demandas')
-        .select(`
-          *,
-          profile:profiles!user_id(id, email, raw_user_meta_data),
-          last_editor:profiles!last_edited_by(id, email, raw_user_meta_data)
-        `)
-        .eq('id', demanda.id)
-        .single();
-
-      if (error) {
-        console.error('Erro ao carregar detalhes da demanda:', error);
-        setDemandaDetails(demanda); // Fallback para dados básicos
-      } else {
-        setDemandaDetails(data);
+      // Carregar dados do criador
+      let creatorData = null;
+      if (demanda.user_id) {
+        const { data: creator, error: creatorError } = await supabase
+          .from('profiles')
+          .select('id, email, raw_user_meta_data')
+          .eq('id', demanda.user_id)
+          .single();
+        
+        if (!creatorError && creator) {
+          creatorData = creator;
+          console.log('Dados do criador carregados:', creator);
+        } else {
+          console.log('Erro ao carregar criador:', creatorError);
+        }
       }
+
+      // Carregar dados do último editor
+      let editorData = null;
+      if (demanda.last_edited_by) {
+        const { data: editor, error: editorError } = await supabase
+          .from('profiles')
+          .select('id, email, raw_user_meta_data')
+          .eq('id', demanda.last_edited_by)
+          .single();
+        
+        if (!editorError && editor) {
+          editorData = editor;
+        }
+      }
+
+      // Montar dados completos
+      const completeData = {
+        ...demanda,
+        profile: creatorData,
+        last_editor: editorData
+      };
+
+      setDemandaDetails(completeData);
     } catch (error) {
       console.error('Erro ao carregar detalhes da demanda:', error);
       setDemandaDetails(demanda); // Fallback para dados básicos
@@ -276,8 +299,9 @@ export default function Dashboard() {
                   <h5 className="font-medium text-slate-700 mb-2">Criado por</h5>
                   <p className="text-slate-600">
                     {demandaDetails?.profile?.raw_user_meta_data?.full_name || 
+                     demandaDetails?.profile?.raw_user_meta_data?.name ||
                      demandaDetails?.profile?.email || 
-                     'Usuário não encontrado'}
+                     `Usuário ID: ${demandaSelecionada?.user_id || 'N/A'}`}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
                     {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -289,8 +313,9 @@ export default function Dashboard() {
                     <h5 className="font-medium text-slate-700 mb-2">Última edição</h5>
                     <p className="text-slate-600">
                       {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
+                       demandaDetails?.last_editor?.raw_user_meta_data?.name ||
                        demandaDetails?.last_editor?.email || 
-                       'Usuário não encontrado'}
+                       `Usuário ID: ${demandaSelecionada?.last_edited_by || 'N/A'}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
                       {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
