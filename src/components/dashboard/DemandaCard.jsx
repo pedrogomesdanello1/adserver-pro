@@ -66,6 +66,7 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
   const [editData, setEditData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [responsibleUser, setResponsibleUser] = useState(null);
+  const [creatorUser, setCreatorUser] = useState(null);
 
   const formatDateSafely = (dateString, formatPattern) => {
     if (!dateString) return null;
@@ -84,6 +85,13 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
     }
   }, [demanda.responsavel_designado]);
 
+  // Carregar dados do criador
+  React.useEffect(() => {
+    if (demanda.user_id) {
+      loadCreatorUser(demanda.user_id);
+    }
+  }, [demanda.user_id]);
+
   const loadResponsibleUser = async (userId) => {
     try {
       const { data: profile, error } = await supabase
@@ -101,6 +109,26 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       }
     } catch (error) {
       console.error('Erro ao carregar responsável:', error);
+    }
+  };
+
+  const loadCreatorUser = async (userId) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, email, raw_user_meta_data')
+        .eq('id', userId)
+        .single();
+      
+      if (profile && !error) {
+        setCreatorUser({
+          id: profile.id,
+          name: profile.raw_user_meta_data?.name || 'Usuário',
+          email: profile.email
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar criador:', error);
     }
   };
 
@@ -360,10 +388,16 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
            </div>
           <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
+              {creatorUser && (
+                <div className="flex items-center gap-1">
+                  <User className="w-4 h-4" />
+                  <span>Criado por: {creatorUser.name}</span>
+                </div>
+              )}
               {responsibleUser && (
                 <div className="flex items-center gap-1">
                   <User className="w-4 h-4" />
-                  <span>{responsibleUser.name}</span>
+                  <span>Responsável: {responsibleUser.name}</span>
                 </div>
               )}
               {demanda.prazo_estimado && (

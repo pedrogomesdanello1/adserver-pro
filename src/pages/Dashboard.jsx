@@ -12,12 +12,18 @@ import DemandaCard from "../components/dashboard/DemandaCard";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
 import ComentariosSection from "../components/dashboard/ComentariosSection";
 import { useNotifications } from "@/context/NotificationContext";
+import NotificationPopup from "@/components/ui/NotificationPopup";
+import { Notificacao } from "@/entities/Notificacao";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { notifications, notify } = useNotifications();
   const [demandas, setDemandas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [agenciasUnicas, setAgenciasUnicas] = useState([]);
   const [clientesUnicos, setClientesUnicos] = useState([]);
   const [responsaveisUnicos, setResponsaveisUnicos] = useState([]);
@@ -35,6 +41,26 @@ export default function Dashboard() {
   useEffect(() => {
     loadDemandas();
   }, []);
+
+  // Carregar contador de notificações não lidas
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      if (user) {
+        try {
+          const count = await Notificacao.countUnread(user.id);
+          setUnreadNotificationsCount(count);
+        } catch (error) {
+          console.error('Erro ao carregar contador de notificações:', error);
+        }
+      }
+    };
+
+    loadUnreadCount();
+    
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Esta é a função de carregamento correta e simplificada
   const loadDemandas = async () => {
@@ -117,13 +143,13 @@ export default function Dashboard() {
             {/* Div da Direita (Ações) */}
             <div className="flex items-center gap-4">
               <button
-                onClick={() => notify.info('Notificações', 'Sistema de notificações ativo!')}
+                onClick={() => setShowNotificationPopup(true)}
                 className="relative p-3 hover:bg-slate-100 rounded-lg transition-colors duration-200"
               >
                 <Bell className="w-6 h-6 text-slate-600" />
-                {notifications.length > 0 && (
+                {unreadNotificationsCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                    {notifications.length}
+                    {unreadNotificationsCount}
                   </span>
                 )}
               </button>
@@ -247,6 +273,12 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Popup de Notificações */}
+      <NotificationPopup 
+        isOpen={showNotificationPopup}
+        onClose={() => setShowNotificationPopup(false)}
+      />
     </div>
   );
 }

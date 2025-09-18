@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { Notificacao } from '@/entities/Notificacao';
 
 class EmailService {
   // Enviar notificação por email quando um comentário é adicionado
@@ -44,6 +45,33 @@ class EmailService {
           destinatarios.add(user.email);
         }
       });
+
+      // Criar notificações reais no banco de dados
+      for (const email of destinatarios) {
+        try {
+          // Buscar ID do usuário pelo email
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+          if (userData && !userError) {
+            await Notificacao.create({
+              user_id: userData.id,
+              tipo: 'comentario',
+              titulo: 'Novo comentário na demanda',
+              mensagem: `Novo comentário adicionado na demanda "${demanda.titulo}"`,
+              dados_extras: {
+                demanda_id: demandaId,
+                comentario_id: comentario.id
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao criar notificação:', error);
+        }
+      }
 
       // Enviar emails (simulado - em produção usaria um serviço real como SendGrid, Resend, etc.)
       for (const email of destinatarios) {
@@ -91,6 +119,17 @@ class EmailService {
       }
 
       // Enviar email
+      // Criar notificação real no banco de dados
+      await Notificacao.create({
+        user_id: responsavelId,
+        tipo: 'demanda_atribuida',
+        titulo: 'Nova demanda atribuída',
+        mensagem: `Você foi designado como responsável pela demanda "${demanda.titulo}"`,
+        dados_extras: {
+          demanda_id: demandaId
+        }
+      });
+
       await this.sendEmail({
         to: responsavel.email,
         subject: `Nova demanda atribuída: ${demanda.titulo}`,
