@@ -6,46 +6,39 @@ class EmailServiceReal {
     this.apiKey = import.meta.env.VITE_RESEND_API_KEY || 're_1234567890';
     // Usar domínio de teste do Resend (não precisa configurar domínio próprio)
     this.fromEmail = 'onboarding@resend.dev';
+    
+    // Debug da API key
+    console.log('API Key carregada:', this.apiKey ? 'SIM' : 'NÃO');
+    console.log('API Key completa:', this.apiKey);
+    console.log('Variável de ambiente:', import.meta.env.VITE_RESEND_API_KEY);
   }
 
-  // Enviar email real usando Resend
+  // Enviar email usando Supabase Edge Function (contorna CORS)
   async sendEmail({ to, subject, html }) {
     try {
-      console.log('=== INICIANDO ENVIO DE EMAIL ===');
+      console.log('=== INICIANDO ENVIO DE EMAIL VIA SUPABASE ===');
       console.log('Para:', to);
       console.log('Assunto:', subject);
-      console.log('De:', this.fromEmail);
-      console.log('API Key (primeiros 10 chars):', this.apiKey.substring(0, 10) + '...');
 
       const emailData = {
-        from: this.fromEmail,
-        to: [to],
+        to,
         subject,
         html,
       };
 
       console.log('Dados do email:', emailData);
 
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(emailData),
+      // Usar Supabase Edge Function para contornar CORS
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: emailData
       });
 
-      console.log('Status da resposta:', response.status);
-      console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erro na resposta:', errorText);
-        throw new Error(`Erro ao enviar email: ${response.status} - ${errorText}`);
+      if (error) {
+        console.error('Erro na Supabase Function:', error);
+        throw new Error(`Erro Supabase: ${error.message}`);
       }
 
-      const data = await response.json();
-      console.log('Email enviado com sucesso:', data);
+      console.log('Email enviado com sucesso via Supabase:', data);
       console.log('=== EMAIL ENVIADO COM SUCESSO ===');
       return { success: true, data };
     } catch (error) {
