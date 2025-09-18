@@ -20,6 +20,7 @@ export default function ComentariosSection({ demandaId }) {
   const [editingComment, setEditingComment] = useState(null);
   const [editText, setEditText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [userEmails, setUserEmails] = useState({});
 
   useEffect(() => {
     if (demandaId) {
@@ -78,10 +79,35 @@ export default function ComentariosSection({ demandaId }) {
     try {
       const data = await Demanda.getComentarios(demandaId);
       setComentarios(data);
+      
+      // Buscar emails dos usuários únicos
+      const userIds = [...new Set(data.map(c => c.user_id))];
+      await loadUserEmails(userIds);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
     }
     setIsLoading(false);
+  };
+
+  const loadUserEmails = async (userIds) => {
+    try {
+      const { data: users, error } = await supabase.auth.admin.listUsers();
+      if (error) {
+        console.error('Erro ao buscar usuários:', error);
+        return;
+      }
+      
+      const emailMap = {};
+      users.forEach(user => {
+        if (userIds.includes(user.id)) {
+          emailMap[user.id] = user.email;
+        }
+      });
+      
+      setUserEmails(emailMap);
+    } catch (error) {
+      console.error('Erro ao buscar emails:', error);
+    }
   };
 
   const handleSubmitComentario = async (e) => {
@@ -110,6 +136,12 @@ export default function ComentariosSection({ demandaId }) {
         setComentarios(prev => [...prev, comentario]);
         setNovoComentario('');
         setSelectedFiles([]);
+        
+        // Adicionar email do usuário atual ao mapa
+        setUserEmails(prev => ({
+          ...prev,
+          [user.id]: user.email
+        }));
       }
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -336,7 +368,7 @@ export default function ComentariosSection({ demandaId }) {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 text-sm">
-                          Usuário {comentario.user_id?.slice(0, 8)}...
+                          {userEmails[comentario.user_id] || `Usuário ${comentario.user_id?.slice(0, 8)}...`}
                         </p>
                         <p className="text-xs text-slate-500">
                           {formatDateSafely(comentario.created_at)}
