@@ -388,16 +388,10 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
            </div>
           <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
-              {creatorUser && (
-                <div className="flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  <span>Criado por: {creatorUser.name}</span>
-                </div>
-              )}
               {responsibleUser && (
                 <div className="flex items-center gap-1">
                   <User className="w-4 h-4" />
-                  <span>Responsável: {responsibleUser.name}</span>
+                  <span>{responsibleUser.name}</span>
                 </div>
               )}
               {demanda.prazo_estimado && (

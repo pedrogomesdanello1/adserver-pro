@@ -239,22 +239,36 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4 text-sm">
-            {demandaSelecionada?.profile && (
-              <div>
-                <h4 className="font-semibold mb-2 text-slate-800">Criado por</h4>
-                <div className="flex items-center gap-3">
-                  <img 
-                    src={demandaSelecionada.profile.raw_user_meta_data?.avatar_url} 
-                    alt="Avatar do criador"
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <p className="font-medium text-slate-900">{demandaSelecionada.profile.raw_user_meta_data?.full_name}</p>
-                    <p className="text-slate-500 text-xs">{demandaSelecionada.profile.email}</p>
-                  </div>
+            <div>
+              <h4 className="font-semibold mb-2 text-slate-800">Informações da Demanda</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-slate-700 mb-2">Criado por</h5>
+                  <p className="text-slate-600">
+                    {demandaSelecionada?.profile?.raw_user_meta_data?.full_name || 
+                     demandaSelecionada?.profile?.email || 
+                     'Usuário não encontrado'}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
                 </div>
+                
+                {demandaSelecionada?.updated_at && demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
+                  <div className="bg-amber-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-slate-700 mb-2">Última edição</h5>
+                    <p className="text-slate-600">
+                      {demandaSelecionada?.last_editor?.raw_user_meta_data?.full_name || 
+                       demandaSelecionada?.last_editor?.email || 
+                       'Usuário não encontrado'}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
             <div>
               <h4 className="font-semibold mb-2 text-slate-800">Descrição Detalhada</h4>
               <p className="text-slate-600 whitespace-pre-wrap">{demandaSelecionada?.descricao || "Nenhuma descrição."}</p>
