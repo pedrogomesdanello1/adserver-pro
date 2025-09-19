@@ -23,18 +23,22 @@ const SortableDemandaCard = ({ demanda, criador, onStatusChange, onDelete, onSel
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="cursor-grab active:cursor-grabbing"
+      className="h-full"
     >
-      <DemandaCard
-        demanda={demanda}
-        criador={criador}
-        onStatusChange={onStatusChange}
-        onDelete={onDelete}
-        onSelect={onSelect}
-        onUpdate={onUpdate}
-      />
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing h-full"
+      >
+        <DemandaCard
+          demanda={demanda}
+          criador={criador}
+          onStatusChange={onStatusChange}
+          onDelete={onDelete}
+          onSelect={onSelect}
+          onUpdate={onUpdate}
+        />
+      </div>
     </div>
   );
 };
