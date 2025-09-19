@@ -368,34 +368,46 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
           </div>
         </CardHeader>
         
-        <CardContent className="pt-0 flex-grow flex flex-col justify-end">
-           <div className="space-y-2 text-sm text-slate-600 mt-4">
-             {demanda.adserver && ( <div className="flex items-center gap-2"><Server className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.adserver}</span></div> )}
-             {demanda.agencia && ( <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.agencia}</span></div> )}
-             {demanda.cliente_final && ( <div className="flex items-center gap-2"><Building className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.cliente_final}</span></div> )}
-           </div>
+        <CardContent className="pt-0 flex-grow flex flex-col">
+          {/* Seção de informações da demanda - sempre na mesma posição */}
+          <div className="space-y-2 text-sm text-slate-600 mt-4 flex-grow">
+            <div className="flex items-center gap-2 h-5">
+              <Server className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="truncate">{demanda.adserver || ''}</span>
+            </div>
+            <div className="flex items-center gap-2 h-5">
+              <Briefcase className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="truncate">{demanda.agencia || ''}</span>
+            </div>
+            <div className="flex items-center gap-2 h-5">
+              <Building className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="truncate">{demanda.cliente_final || ''}</span>
+            </div>
+          </div>
+          
+          {/* Seção de rodapé - sempre no final */}
           <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
-              {responsibleUser && (
-                <div className="flex items-center gap-1 min-w-0">
-                  <User className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{responsibleUser.name}</span>
-                </div>
-              )}
-              {demanda.prazo_estimado && (
-                <div className="flex items-center gap-1">
-                  {demanda.prioridade === 'urgente' ? (
+              <div className="flex items-center gap-1 min-w-0 h-5">
+                <User className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{responsibleUser?.name || 'Sem responsável'}</span>
+              </div>
+              <div className="flex items-center gap-1 h-5">
+                {demanda.prazo_estimado ? (
+                  demanda.prioridade === 'urgente' ? (
                     <UrgentTimer createdAt={demanda.created_at} />
                   ) : (
                     <>
                       <Calendar className="w-4 h-4" />
                       <span>{formatDateSafely(demanda.prazo_estimado, "dd/MM")}</span>
                     </>
-                  )}
-                </div>
-              )}
+                  )
+                ) : (
+                  <span className="text-slate-400">Sem prazo</span>
+                )}
+              </div>
             </div>
-            <div className="text-xs">
+            <div className="text-xs h-5 flex items-center">
               {demanda.updated_at && demanda.updated_at !== demanda.created_at ? (
                 <span className="text-amber-600">Editado {formatDateSafely(demanda.updated_at, "dd/MM/yy")}</span>
               ) : (
