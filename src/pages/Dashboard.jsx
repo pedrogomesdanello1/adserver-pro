@@ -314,7 +314,7 @@ export default function Dashboard() {
           <div className="space-y-6 py-4 text-sm">
             <div>
               <h4 className="font-semibold mb-2 text-slate-800">Informações da Demanda</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="bg-slate-50 p-4 rounded-lg">
                   <h5 className="font-medium text-slate-700 mb-2">Criado por</h5>
                   <p className="text-slate-600">
