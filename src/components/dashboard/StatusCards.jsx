@@ -117,7 +117,7 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             </div>
             
             {/* Ícone de fundo com transparência - design elegante no canto inferior direito */}
-            <div className="absolute -bottom-4 -right-4 opacity-27">
+            <div className="absolute -bottom-4 -right-4 opacity-25">
               <Icon className={`w-32 h-32 ${config.color}`} />
             </div>
             
