@@ -291,7 +291,7 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-full min-h-[300px] ${
+      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-[320px] ${
         demanda.prioridade === 'urgente' ? 'urgent-pulse border-red-200' : ''
       }`}>
         <CardHeader className="pb-3">

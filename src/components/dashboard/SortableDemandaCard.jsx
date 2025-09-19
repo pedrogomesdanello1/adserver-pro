@@ -23,21 +23,36 @@ const SortableDemandaCard = ({ demanda, criador, onStatusChange, onDelete, onSel
     <div
       ref={setNodeRef}
       style={style}
-      className="h-full"
+      className="h-full min-h-[300px]"
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing h-full"
-      >
-        <DemandaCard
-          demanda={demanda}
-          criador={criador}
-          onStatusChange={onStatusChange}
-          onDelete={onDelete}
-          onSelect={onSelect}
-          onUpdate={onUpdate}
-        />
+      <div className="relative h-full">
+        {/* Handle de drag - apenas uma pequena área */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 right-2 w-6 h-6 cursor-grab active:cursor-grabbing z-10 bg-slate-100 hover:bg-slate-200 rounded-md flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <circle cx="3" cy="3" r="1"/>
+            <circle cx="9" cy="3" r="1"/>
+            <circle cx="3" cy="6" r="1"/>
+            <circle cx="9" cy="6" r="1"/>
+            <circle cx="3" cy="9" r="1"/>
+            <circle cx="9" cy="9" r="1"/>
+          </svg>
+        </div>
+        
+        {/* Card principal - sem interferência do drag */}
+        <div className="h-full">
+          <DemandaCard
+            demanda={demanda}
+            criador={criador}
+            onStatusChange={onStatusChange}
+            onDelete={onDelete}
+            onSelect={onSelect}
+            onUpdate={onUpdate}
+          />
+        </div>
       </div>
     </div>
   );

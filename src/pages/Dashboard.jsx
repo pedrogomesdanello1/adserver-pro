@@ -323,7 +323,7 @@ export default function Dashboard() {
                   items={demandasFiltradas.map(d => d.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: '320px' }}>
                     <AnimatePresence>
                       {demandasFiltradas.map((demanda) => (
                         <SortableDemandaCard
