@@ -25,14 +25,19 @@ const MentionInput = ({
     // Verificar se há uma menção sendo digitada
     const cursorPos = e.target.selectionStart;
     const textBeforeCursor = newValue.substring(0, cursorPos);
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    const mentionMatch = textBeforeCursor.match(/@([^@\s]*)$/);
 
     if (mentionMatch) {
       const query = mentionMatch[1].toLowerCase();
-      const filteredUsers = users.filter(user => 
-        user.name?.toLowerCase().includes(query) || 
-        user.email?.toLowerCase().includes(query)
-      );
+      const filteredUsers = users.filter(user => {
+        const name = user.name?.toLowerCase() || '';
+        const email = user.email?.toLowerCase() || '';
+        
+        // Buscar por nome completo, primeiro nome, ou email
+        return name.includes(query) || 
+               email.includes(query) ||
+               name.split(' ').some(part => part.startsWith(query));
+      });
       
       setSuggestions(filteredUsers);
       setShowSuggestions(filteredUsers.length > 0);

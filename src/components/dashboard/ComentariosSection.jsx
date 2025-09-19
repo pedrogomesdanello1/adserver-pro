@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { Notificacao } from '@/entities/Notificacao';
 
 export default function ComentariosSection({ demandaId }) {
   const { user } = useAuth();
@@ -209,6 +210,45 @@ export default function ComentariosSection({ demandaId }) {
     return mentions;
   };
 
+  // Função para notificar todos os usuários sobre um novo comentário
+  const notifyAllUsersAboutComment = async (demandaId, comentario, author) => {
+    try {
+      // Buscar todos os usuários cadastrados
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .neq('id', author.id); // Excluir o autor do comentário
+
+      if (usersError) {
+        console.error('Erro ao buscar usuários:', usersError);
+        return;
+      }
+
+      // Criar notificações para todos os usuários
+      const notifications = allUsers.map(user => ({
+        user_id: user.id,
+        tipo: 'comentario',
+        titulo: 'Novo comentário',
+        mensagem: `${author?.user_metadata?.full_name || author?.email} comentou em uma demanda`,
+        dados_extras: {
+          demanda_id: demandaId,
+          comentario_id: comentario.id,
+          autor_id: author.id
+        },
+        lida: false
+      }));
+
+      // Inserir todas as notificações
+      for (const notification of notifications) {
+        await Notificacao.create(notification);
+      }
+
+      console.log(`Notificações enviadas para ${allUsers.length} usuários`);
+    } catch (error) {
+      console.error('Erro ao notificar usuários sobre comentário:', error);
+    }
+  };
+
   const handleSubmitComentario = async (e) => {
     e.preventDefault();
     if (!novoComentario.trim() && selectedFiles.length === 0) return;
@@ -245,6 +285,9 @@ export default function ComentariosSection({ demandaId }) {
 
         // Notificação de sucesso
         notify.success('Comentário adicionado', 'Seu comentário foi publicado com sucesso!');
+        
+        // Notificar todos os usuários sobre o novo comentário
+        await notifyAllUsersAboutComment(demandaId, comentario, user);
 
       }
     } catch (error) {
