@@ -104,8 +104,7 @@ export default function EditarDemanda() {
       // Atualizar demanda
       const updatedDemanda = await Demanda.update(id, {
         ...formData,
-        updated_at: new Date().toISOString(),
-        last_edited_by: user?.id
+        updated_at: new Date().toISOString()
       });
 
       if (updatedDemanda) {
