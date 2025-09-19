@@ -125,6 +125,7 @@ export default function ComentariosSection({ demandaId }) {
   };
 
   const loadAvailableUsers = async () => {
+    console.log('👥 Carregando usuários disponíveis para menções...');
     try {
       // Buscar todos os usuários para menções
       const { data: profiles, error } = await supabase
@@ -132,19 +133,22 @@ export default function ComentariosSection({ demandaId }) {
         .select('id, email, raw_user_meta_data');
       
       if (error) {
-        console.error('Erro ao buscar usuários para menção:', error);
+        console.error('❌ Erro ao buscar usuários para menção:', error);
         return;
       }
       
+      console.log('📋 Profiles encontrados:', profiles);
+      
       const users = profiles.map(profile => ({
         id: profile.id,
-        name: profile.raw_user_meta_data?.name,
+        name: profile.raw_user_meta_data?.full_name || profile.raw_user_meta_data?.name,
         email: profile.email
       }));
       
+      console.log('👤 Usuários processados:', users);
       setAvailableUsers(users);
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      console.error('❌ Erro ao carregar usuários:', error);
     }
   };
 
