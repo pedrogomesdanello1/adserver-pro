@@ -316,29 +316,21 @@ export default function Dashboard() {
               <h4 className="font-semibold mb-2 text-slate-800">Informações da Demanda</h4>
               <div className="space-y-4">
                 <div className="bg-slate-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-slate-700 mb-2">Criado por</h5>
                   <p className="text-slate-600">
-                    {demandaDetails?.profile?.raw_user_meta_data?.full_name || 
+                    <span className="font-medium text-slate-700">Criado por</span> {demandaDetails?.profile?.raw_user_meta_data?.full_name || 
                      demandaDetails?.profile?.raw_user_meta_data?.name ||
                      demandaDetails?.profile?.email || 
-                     `Usuário ID: ${demandaSelecionada?.user_id || 'N/A'}`}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                     `Usuário ID: ${demandaSelecionada?.user_id || 'N/A'}`}, {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                   </p>
                 </div>
                 
                 {demandaSelecionada?.updated_at && demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
                   <div className="bg-amber-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-slate-700 mb-2">Última edição</h5>
                     <p className="text-slate-600">
-                      {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
+                      <span className="font-medium text-slate-700">Última edição</span> {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
                        demandaDetails?.last_editor?.raw_user_meta_data?.name ||
                        demandaDetails?.last_editor?.email || 
-                       `Usuário ID: ${demandaSelecionada?.last_edited_by || 'N/A'}`}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                       `Usuário ID: ${demandaSelecionada?.last_edited_by || 'N/A'}`}, {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </p>
                   </div>
                 )}
