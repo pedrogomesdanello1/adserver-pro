@@ -216,16 +216,15 @@ export default function ComentariosSection({ demandaId }) {
 
   // Função para notificar todos os usuários sobre um novo comentário
   const notifyAllUsersAboutComment = async (demandaId, comentario, author) => {
-    console.log('🔔 Iniciando notificação para todos os usuários...', { demandaId, comentario, author });
+    console.log('🔔 Iniciando notificação UNIVERSAL para todos os usuários...', { demandaId, comentario, author });
     
     try {
-      // Buscar todos os usuários cadastrados
+      // Buscar TODOS os usuários cadastrados (incluindo o autor)
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
-        .neq('id', author.id); // Excluir o autor do comentário
+        .select('id, full_name, email');
 
-      console.log('👥 Usuários encontrados:', allUsers);
+      console.log('👥 TODOS os usuários encontrados:', allUsers);
 
       if (usersError) {
         console.error('❌ Erro ao buscar usuários:', usersError);
@@ -237,7 +236,7 @@ export default function ComentariosSection({ demandaId }) {
         return;
       }
 
-      // Criar notificações para todos os usuários
+      // Criar notificações para TODOS os usuários (sistema universal)
       const notifications = allUsers.map(user => ({
         user_id: user.id,
         tipo: 'comentario',
@@ -251,7 +250,7 @@ export default function ComentariosSection({ demandaId }) {
         lida: false
       }));
 
-      console.log('📝 Notificações a serem criadas:', notifications);
+      console.log('📝 Notificações UNIVERSAL a serem criadas:', notifications);
 
       // Inserir todas as notificações
       let successCount = 0;
@@ -262,7 +261,7 @@ export default function ComentariosSection({ demandaId }) {
         }
       }
 
-      console.log(`✅ Notificações enviadas: ${successCount}/${allUsers.length} usuários`);
+      console.log(`✅ Notificações UNIVERSAL enviadas: ${successCount}/${allUsers.length} usuários`);
     } catch (error) {
       console.error('❌ Erro ao notificar usuários sobre comentário:', error);
     }

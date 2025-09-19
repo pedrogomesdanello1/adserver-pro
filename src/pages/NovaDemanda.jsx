@@ -15,6 +15,8 @@ import { CreatableSelect } from "@/components/ui/CreatableSelect";
 import { useAuth } from '../context/AuthContext';
 import ResponsibleSelector from '@/components/ui/ResponsibleSelector';
 import { useNotifications } from '@/context/NotificationContext';
+import { Notificacao } from '@/entities/Notificacao';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function NovaDemanda() {
   const { user } = useAuth(); 
@@ -73,6 +75,58 @@ export default function NovaDemanda() {
     setError(null);
   };
 
+  // Função para notificar todos os usuários sobre uma nova demanda
+  const notifyAllUsersAboutNewDemanda = async (demanda, author) => {
+    console.log('🔔 Iniciando notificação UNIVERSAL para nova demanda...', { demanda, author });
+    
+    try {
+      // Buscar TODOS os usuários cadastrados (incluindo o autor)
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+
+      console.log('👥 TODOS os usuários encontrados para nova demanda:', allUsers);
+
+      if (usersError) {
+        console.error('❌ Erro ao buscar usuários:', usersError);
+        return;
+      }
+
+      if (!allUsers || allUsers.length === 0) {
+        console.log('⚠️ Nenhum usuário encontrado para notificar sobre nova demanda');
+        return;
+      }
+
+      // Criar notificações para TODOS os usuários (sistema universal)
+      const notifications = allUsers.map(user => ({
+        user_id: user.id,
+        tipo: 'nova_demanda',
+        titulo: 'Nova demanda criada',
+        mensagem: `${author?.user_metadata?.full_name || author?.email} criou uma nova demanda: "${demanda.titulo}"`,
+        dados_extras: {
+          demanda_id: demanda.id,
+          autor_id: author.id
+        },
+        lida: false
+      }));
+
+      console.log('📝 Notificações UNIVERSAL de nova demanda a serem criadas:', notifications);
+
+      // Inserir todas as notificações
+      let successCount = 0;
+      for (const notification of notifications) {
+        const result = await Notificacao.create(notification);
+        if (result) {
+          successCount++;
+        }
+      }
+
+      console.log(`✅ Notificações UNIVERSAL de nova demanda enviadas: ${successCount}/${allUsers.length} usuários`);
+    } catch (error) {
+      console.error('❌ Erro ao notificar usuários sobre nova demanda:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -86,6 +140,8 @@ export default function NovaDemanda() {
       const dadosParaEnviar = { ...formData, user_id: user.id };
       const novaDemanda = await Demanda.create(dadosParaEnviar);
       
+      // Notificar todos os usuários sobre a nova demanda
+      await notifyAllUsersAboutNewDemanda(novaDemanda, user);
       
       navigate("/"); 
     } catch (error) {
