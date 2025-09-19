@@ -27,7 +27,7 @@ export const Demanda = {
               
               const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('name, email')
+                .select('raw_user_meta_data, email')
                 .eq('id', demanda.responsavel_designado)
                 .single();
               
@@ -37,10 +37,17 @@ export const Demanda = {
               }
               
               if (profile) {
-                console.log(`✅ Responsável carregado para demanda ${demanda.id}:`, profile);
+                // Extrair nome do JSON raw_user_meta_data
+                const userName = profile.raw_user_meta_data?.name || profile.email;
+                const responsibleUser = {
+                  name: userName,
+                  email: profile.email
+                };
+                
+                console.log(`✅ Responsável carregado para demanda ${demanda.id}:`, responsibleUser);
                 return {
                   ...demanda,
-                  responsibleUser: profile
+                  responsibleUser: responsibleUser
                 };
               } else {
                 console.log(`❌ Perfil não encontrado para ID: ${demanda.responsavel_designado}`);
