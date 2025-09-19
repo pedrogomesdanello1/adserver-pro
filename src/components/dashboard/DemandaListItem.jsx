@@ -275,7 +275,7 @@ export default function DemandaListItem({
             </div>
           </div>
           <div className="text-xs text-slate-400">
-            {demanda.updated_at && demanda.updated_at !== demanda.created_at ? (
+            {demanda.updated_at && demanda.last_edited_by && demanda.updated_at !== demanda.created_at ? (
               <span className="text-amber-600">Editado {formatDateSafely(demanda.updated_at, "dd/MM/yy")}</span>
             ) : (
               formatDateSafely(demanda.created_at, "dd/MM/yy")

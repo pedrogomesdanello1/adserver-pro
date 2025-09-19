@@ -363,7 +363,9 @@ export default function Dashboard() {
                      demandaDetails?.profile?.raw_user_meta_data?.name ||
                      demandaDetails?.profile?.email || 
                      `Usuário ID: ${demandaSelecionada?.user_id || 'N/A'}`}, {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    {demandaSelecionada?.updated_at && demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
+                    {demandaSelecionada?.updated_at && 
+                     demandaSelecionada?.last_edited_by && 
+                     demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
                       <span>. <span className="font-medium text-slate-700">Última edição:</span> {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
                        demandaDetails?.last_editor?.raw_user_meta_data?.name ||
                        demandaDetails?.last_editor?.email || 
