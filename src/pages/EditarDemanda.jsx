@@ -102,10 +102,7 @@ export default function EditarDemanda() {
       }
 
       // Atualizar demanda
-      const updatedDemanda = await Demanda.update(id, {
-        ...formData,
-        updated_at: new Date().toISOString()
-      });
+      const updatedDemanda = await Demanda.update(id, formData);
 
       if (updatedDemanda) {
         navigate("/");

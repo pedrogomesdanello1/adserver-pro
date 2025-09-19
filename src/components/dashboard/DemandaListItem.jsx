@@ -112,6 +112,12 @@ export default function DemandaListItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Debug: verificar dados recebidos
+  console.log(`DemandaListItem - Demanda ${demanda.id}:`, {
+    responsavel_designado: demanda.responsavel_designado,
+    responsibleUser: responsibleUser
+  });
+
   const statusInfo = statusConfig[demanda.status] || statusConfig.pendente_visualizacao;
   const StatusIcon = statusInfo.icon;
 
