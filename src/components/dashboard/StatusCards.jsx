@@ -8,28 +8,24 @@ const statusConfig = {
     icon: Clock, 
     color: "text-amber-700", 
     bgColor: "bg-amber-100", 
-    bgIconColor: "text-amber-200",
     label: "Pendente de Visualização" 
   },
   visualizada: { 
     icon: Eye, 
     color: "text-blue-700", 
     bgColor: "bg-blue-100", 
-    bgIconColor: "text-blue-200",
     label: "Visualizada" 
   },
   em_producao: { 
     icon: Cog, 
     color: "text-purple-700", 
     bgColor: "bg-purple-100", 
-    bgIconColor: "text-purple-200",
     label: "Em Produção" 
   },
   finalizada: { 
     icon: CheckCircle2, 
     color: "text-emerald-700", 
     bgColor: "bg-emerald-100", 
-    bgIconColor: "text-emerald-200",
     label: "Finalizada" 
   }
 };
@@ -105,7 +101,7 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`
-              bg-white dark:bg-slate-800 rounded-lg border-2 p-6 cursor-pointer transition-all duration-200 relative overflow-hidden
+              relative bg-white dark:bg-slate-800 rounded-lg border-2 p-6 cursor-pointer transition-all duration-200
               ${isSelected 
                 ? 'border-blue-500 shadow-lg shadow-blue-500/20' 
                 : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
@@ -113,38 +109,36 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             `}
             onClick={() => handleStatusClick(status)}
           >
-            {/* Ícone de fundo transparente */}
-            <div className="absolute -bottom-2 -right-2 opacity-10 dark:opacity-5">
-              <Icon className={`w-24 h-24 ${config.bgIconColor}`} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                {config.label}
+              </h3>
+              <Icon className={`w-5 h-5 ${config.color}`} />
             </div>
             
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  {config.label}
-                </h3>
-                <Icon className={`w-5 h-5 ${config.color}`} />
-              </div>
-              
-              <div className="flex items-baseline">
-                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-                  {count}
-                </span>
-                <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                  {count === 1 ? 'demanda' : 'demandas'}
-                </span>
-              </div>
-              
-              {isSelected && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium"
-                >
-                  Filtro ativo
-                </motion.div>
-              )}
+            {/* Ícone de fundo com transparência */}
+            <div className="absolute top-4 right-4 opacity-50">
+              <Icon className={`w-16 h-16 ${config.color}`} />
             </div>
+            
+            <div className="flex items-baseline">
+              <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {count}
+              </span>
+              <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                {count === 1 ? 'demanda' : 'demandas'}
+              </span>
+            </div>
+            
+            {isSelected && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium"
+              >
+                Filtro ativo
+              </motion.div>
+            )}
           </motion.div>
         );
       })}
