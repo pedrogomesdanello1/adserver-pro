@@ -363,19 +363,14 @@ export default function Dashboard() {
                      demandaDetails?.profile?.raw_user_meta_data?.name ||
                      demandaDetails?.profile?.email || 
                      `Usuário ID: ${demandaSelecionada?.user_id || 'N/A'}`}, {demandaSelecionada && format(new Date(demandaSelecionada.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </p>
-                </div>
-                
-                {demandaSelecionada?.updated_at && demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <p className="text-slate-600">
-                      <span className="font-medium text-slate-700">Última edição</span> {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
+                    {demandaSelecionada?.updated_at && demandaSelecionada.updated_at !== demandaSelecionada.created_at && (
+                      <span>. <span className="font-medium text-slate-700">Última edição:</span> {demandaDetails?.last_editor?.raw_user_meta_data?.full_name || 
                        demandaDetails?.last_editor?.raw_user_meta_data?.name ||
                        demandaDetails?.last_editor?.email || 
-                       `Usuário ID: ${demandaSelecionada?.last_edited_by || 'N/A'}`}, {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </p>
-                  </div>
-                )}
+                       `Usuário ID: ${demandaSelecionada?.last_edited_by || 'N/A'}`}, {format(new Date(demandaSelecionada.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
             <div>

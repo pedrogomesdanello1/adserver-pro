@@ -93,9 +93,15 @@ export const Demanda = {
   },
 
   update: async (id, updates) => {
+    // Adicionar last_edited_by automaticamente
+    const updatesWithEditor = {
+      ...updates,
+      last_edited_by: (await supabase.auth.getUser()).data.user?.id
+    };
+
     const { error } = await supabase
       .from('demandas')
-      .update(updates)
+      .update(updatesWithEditor)
       .eq('id', id);
 
     if (error) {
