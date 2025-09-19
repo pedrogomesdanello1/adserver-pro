@@ -27,7 +27,7 @@ export const Demanda = {
               
               const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('name, email, avatar_url')
+                .select('full_name, display_name, email, avatar_url')
                 .eq('id', demanda.responsavel_designado)
                 .single();
               
