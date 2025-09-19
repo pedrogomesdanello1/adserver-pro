@@ -3,21 +3,46 @@ import { Comentario } from './Comentario';
 
 export const Demanda = {
   list: async () => {
-    // Carregar demandas com dados do responsável e contagem de comentários
-    const { data, error } = await supabase
-      .from('demandas')
-      .select(`
-        *, 
-        responsibleUser:profiles!responsavel_designado(name, email, avatar_url),
-        comentarios_count:comentarios(count)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      // Primeiro, tentar carregar com JOIN
+      const { data, error } = await supabase
+        .from('demandas')
+        .select(`
+          *, 
+          responsibleUser:profiles!responsavel_designado(name, email, avatar_url),
+          comentarios_count:comentarios(count)
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error("Erro ao listar demandas com JOIN:", error);
+        
+        // Fallback: carregar sem JOIN
+        console.log("Tentando carregar sem JOIN...");
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('demandas')
+          .select(`
+            *, 
+            comentarios_count:comentarios(count)
+          `)
+          .order('created_at', { ascending: false });
+          
+        if (fallbackError) {
+          console.error("Erro ao listar demandas (fallback):", fallbackError);
+          return [];
+        }
+        
+        console.log("Demandas carregadas (fallback):", fallbackData?.length || 0);
+        return fallbackData || [];
+      }
       
-    if (error) {
-      console.error("Erro ao listar demandas:", error);
+      console.log("Demandas carregadas (com JOIN):", data?.length || 0);
+      return data || [];
+      
+    } catch (error) {
+      console.error("Erro geral ao listar demandas:", error);
       return [];
     }
-    return data;
   },
 
   create: async (novaDemanda) => {
