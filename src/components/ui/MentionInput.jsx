@@ -29,15 +29,25 @@ const MentionInput = ({
 
     if (mentionMatch) {
       const query = mentionMatch[1].toLowerCase();
+      console.log('🔍 Buscando menção:', { query, users: users.length });
+      
       const filteredUsers = users.filter(user => {
         const name = user.name?.toLowerCase() || '';
         const email = user.email?.toLowerCase() || '';
         
         // Buscar por nome completo, primeiro nome, ou email
-        return name.includes(query) || 
+        const matches = name.includes(query) || 
                email.includes(query) ||
                name.split(' ').some(part => part.startsWith(query));
+        
+        if (matches) {
+          console.log('✅ Usuário encontrado:', { name, email, query });
+        }
+        
+        return matches;
       });
+      
+      console.log('👥 Usuários filtrados:', filteredUsers.length);
       
       setSuggestions(filteredUsers);
       setShowSuggestions(filteredUsers.length > 0);

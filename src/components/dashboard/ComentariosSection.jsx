@@ -212,6 +212,8 @@ export default function ComentariosSection({ demandaId }) {
 
   // Função para notificar todos os usuários sobre um novo comentário
   const notifyAllUsersAboutComment = async (demandaId, comentario, author) => {
+    console.log('🔔 Iniciando notificação para todos os usuários...', { demandaId, comentario, author });
+    
     try {
       // Buscar todos os usuários cadastrados
       const { data: allUsers, error: usersError } = await supabase
@@ -219,8 +221,15 @@ export default function ComentariosSection({ demandaId }) {
         .select('id, full_name, email')
         .neq('id', author.id); // Excluir o autor do comentário
 
+      console.log('👥 Usuários encontrados:', allUsers);
+
       if (usersError) {
-        console.error('Erro ao buscar usuários:', usersError);
+        console.error('❌ Erro ao buscar usuários:', usersError);
+        return;
+      }
+
+      if (!allUsers || allUsers.length === 0) {
+        console.log('⚠️ Nenhum usuário encontrado para notificar');
         return;
       }
 
@@ -238,14 +247,20 @@ export default function ComentariosSection({ demandaId }) {
         lida: false
       }));
 
+      console.log('📝 Notificações a serem criadas:', notifications);
+
       // Inserir todas as notificações
+      let successCount = 0;
       for (const notification of notifications) {
-        await Notificacao.create(notification);
+        const result = await Notificacao.create(notification);
+        if (result) {
+          successCount++;
+        }
       }
 
-      console.log(`Notificações enviadas para ${allUsers.length} usuários`);
+      console.log(`✅ Notificações enviadas: ${successCount}/${allUsers.length} usuários`);
     } catch (error) {
-      console.error('Erro ao notificar usuários sobre comentário:', error);
+      console.error('❌ Erro ao notificar usuários sobre comentário:', error);
     }
   };
 
