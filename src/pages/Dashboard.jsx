@@ -7,8 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format } from 'date-fns';
 import { ptBR } from "date-fns/locale";
-import DemandaCard from "../components/dashboard/DemandaCard";
-import SortableDemandaCard from "../components/dashboard/SortableDemandaCard";
+import DemandaListItem from "../components/dashboard/DemandaListItem";
 import FiltrosDemandas from "../components/dashboard/FiltrosDemandas";
 import ComentariosSection from "../components/dashboard/ComentariosSection";
 import StatusCards from "../components/dashboard/StatusCards";
@@ -17,24 +16,6 @@ import NotificationPopup from "@/components/ui/NotificationPopup";
 import { Notificacao } from "@/entities/Notificacao";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -49,12 +30,6 @@ export default function Dashboard() {
   const [responsaveisUnicos, setResponsaveisUnicos] = useState([]);
 
   // Configuração dos sensores para drag and drop
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
   const [filtros, setFiltros] = useState({
     status: "todos",
     area: "todos",
@@ -114,18 +89,6 @@ export default function Dashboard() {
   };
 
   // Função para lidar com o drag and drop
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-
-    if (active.id !== over.id) {
-      setDemandas((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
 
   // Carregar detalhes da demanda (criador e editor)
   const loadDemandaDetails = async (demanda) => {
@@ -314,36 +277,27 @@ export default function Dashboard() {
                 <Button onClick={() => navigate('/novademanda')}><Plus className="w-4 h-4 mr-2" />Criar Demanda</Button>
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={demandasFiltradas.map(d => d.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: '400px' }}>
-                    <AnimatePresence>
-                      {demandasFiltradas.map((demanda) => (
-                        <SortableDemandaCard
-                          key={demanda.id}
-                          demanda={demanda}
-                          onStatusChange={handleStatusChange}
-                          onDelete={handleDeleteDemanda}
-                          onSelect={() => {
-                            setDemandaSelecionada(demanda);
-                            loadDemandaDetails(demanda);
-                          }}
-                          onUpdate={(updatedDemanda) => {
-                            setDemandas(prev => prev.map(d => d.id === updatedDemanda.id ? updatedDemanda : d));
-                          }}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </SortableContext>
-              </DndContext>
+              <div className="space-y-4">
+                <AnimatePresence>
+                  {demandasFiltradas.map((demanda) => (
+                    <DemandaListItem
+                      key={demanda.id}
+                      demanda={demanda}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDeleteDemanda}
+                      onSelect={() => {
+                        setDemandaSelecionada(demanda);
+                        loadDemandaDetails(demanda);
+                      }}
+                      onEdit={(demanda) => {
+                        setDemandaSelecionada(demanda);
+                        loadDemandaDetails(demanda);
+                      }}
+                      responsibleUser={demanda.responsibleUser}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
             )}
           </div>
         </motion.div>
