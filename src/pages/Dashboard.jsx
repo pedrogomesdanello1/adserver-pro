@@ -290,8 +290,7 @@ export default function Dashboard() {
                         loadDemandaDetails(demanda);
                       }}
                       onEdit={(demanda) => {
-                        setDemandaSelecionada(demanda);
-                        loadDemandaDetails(demanda);
+                        navigate(`/editardemanda/${demanda.id}`);
                       }}
                       responsibleUser={demanda.responsibleUser}
                     />

@@ -251,7 +251,7 @@ export default function DemandaListItem({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4 text-slate-400" />
-              <span className="truncate">{responsibleUser?.name || 'Sem responsável'}</span>
+              <span className="truncate">{responsibleUser?.name || demanda.responsavel_designado || 'Sem responsável'}</span>
             </div>
             <div className="flex items-center gap-1">
               {demanda.prazo_estimado ? (
