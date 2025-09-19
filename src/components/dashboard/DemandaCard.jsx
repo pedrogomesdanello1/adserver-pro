@@ -291,44 +291,20 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-[400px] ${
+      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white relative h-[400px] ${
         demanda.prioridade === 'urgente' ? 'urgent-pulse border-red-200' : ''
       }`}>
-        <CardHeader className="pb-3">
+        {/* Header - posição fixa no topo */}
+        <div className="absolute top-0 left-0 right-0 p-4 pb-2">
           <div className="flex items-start justify-between">
-            <div className="flex-1 flex flex-col gap-2">
-              <div>
-                <h3 className="font-semibold text-slate-900 text-lg leading-tight line-clamp-2">
-                  {demanda.titulo}
-                </h3>
-                <p className="text-slate-600 text-sm line-clamp-2 mt-1">
-                  {demanda.descricao}
-                </p>
-              </div>
-                  {demanda.observacoes && (
-                    <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-100 p-2 rounded-md mt-2">
-                      <MessageSquareDashed className="h-4 w-4" />
-                      <span className="font-medium">Possui observações</span>
-                    </div>
-                  )}
-                  {demanda.comentarios_count && demanda.comentarios_count[0]?.count > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-blue-800 bg-blue-100 p-2 rounded-md mt-2">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="font-medium">
-                        {demanda.comentarios_count[0].count} comentário{demanda.comentarios_count[0].count !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  )}
-              <div className="flex flex-wrap gap-2">
-                <Badge className={areaConfig[demanda.area_responsavel]?.color}>
-                  {areaConfig[demanda.area_responsavel]?.label}
-                </Badge>
-                <Badge className={prioridadeConfig[demanda.prioridade]?.color}>
-                  {prioridadeConfig[demanda.prioridade]?.label}
-                </Badge>
-              </div>
+            <div className="flex-1 pr-2">
+              <h3 className="font-semibold text-slate-900 text-lg leading-tight line-clamp-2 h-12 flex items-start">
+                {demanda.titulo}
+              </h3>
+              <p className="text-slate-600 text-sm line-clamp-2 mt-1 h-8 flex items-start">
+                {demanda.descricao}
+              </p>
             </div>
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="ml-2" onClick={handleMenuClick}>
@@ -366,11 +342,41 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardHeader>
+        </div>
+
+        {/* Seção de observações e comentários - posição fixa */}
+        <div className="absolute top-24 left-4 right-4 space-y-2">
+          {demanda.observacoes && (
+            <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-100 p-2 rounded-md h-8">
+              <MessageSquareDashed className="h-4 w-4" />
+              <span className="font-medium">Possui observações</span>
+            </div>
+          )}
+          {demanda.comentarios_count && demanda.comentarios_count[0]?.count > 0 && (
+            <div className="flex items-center gap-2 text-xs text-blue-800 bg-blue-100 p-2 rounded-md h-8">
+              <MessageSquare className="h-4 w-4" />
+              <span className="font-medium">
+                {demanda.comentarios_count[0].count} comentário{demanda.comentarios_count[0].count !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Seção de badges - posição fixa */}
+        <div className="absolute top-32 left-4 right-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge className={areaConfig[demanda.area_responsavel]?.color}>
+              {areaConfig[demanda.area_responsavel]?.label}
+            </Badge>
+            <Badge className={prioridadeConfig[demanda.prioridade]?.color}>
+              {prioridadeConfig[demanda.prioridade]?.label}
+            </Badge>
+          </div>
+        </div>
         
-        <CardContent className="pt-0 flex-grow flex flex-col">
-          {/* Seção de informações da demanda - sempre na mesma posição */}
-          <div className="space-y-2 text-sm text-slate-600 mt-4 flex-grow">
+        <CardContent className="pt-0 flex-grow relative">
+          {/* Seção de informações da demanda - posição fixa */}
+          <div className="absolute top-48 left-4 right-4 space-y-2 text-sm text-slate-600">
             <div className="flex items-center gap-2 h-5">
               <Server className="w-4 h-4 text-slate-400 flex-shrink-0" />
               <span className="truncate">{demanda.adserver || ''}</span>
@@ -385,8 +391,8 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
             </div>
           </div>
           
-          {/* Seção de rodapé - sempre no final */}
-          <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
+          {/* Seção de rodapé - posição fixa no final */}
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-sm text-slate-500 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1 min-w-0 h-5">
                 <User className="w-4 h-4 flex-shrink-0" />
