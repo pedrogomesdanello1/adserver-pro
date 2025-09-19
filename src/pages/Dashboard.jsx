@@ -76,16 +76,54 @@ export default function Dashboard() {
 
       const agencias = [...new Set(data.map(d => d.agencia).filter(Boolean))];
       const clientes = [...new Set(data.map(d => d.cliente_final).filter(Boolean))];
-      const responsaveis = [...new Set(data.map(d => d.responsavel_designado).filter(Boolean))];
+      
+      // Carregar responsáveis com nomes ao invés de IDs
+      const responsaveisComNomes = await loadResponsaveisComNomes(data);
+      setResponsaveisUnicos(responsaveisComNomes);
 
       setAgenciasUnicas(agencias.sort());
       setClientesUnicos(clientes.sort());
-      setResponsaveisUnicos(responsaveis.sort());
 
     } catch (error) {
       console.error("Erro ao carregar demandas:", error);
     }
     setIsLoading(false);
+  };
+
+  // Função para carregar responsáveis com nomes
+  const loadResponsaveisComNomes = async (demandas) => {
+    try {
+      // Pegar IDs únicos dos responsáveis
+      const responsavelIds = [...new Set(demandas.map(d => d.responsavel_designado).filter(Boolean))];
+      
+      if (responsavelIds.length === 0) return [];
+
+      // Carregar perfis dos responsáveis
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, raw_user_meta_data, email')
+        .in('id', responsavelIds);
+
+      if (error) {
+        console.error("Erro ao carregar perfis dos responsáveis:", error);
+        return responsavelIds; // Fallback para IDs
+      }
+
+      // Mapear IDs para nomes
+      const responsaveisComNomes = responsavelIds.map(id => {
+        const profile = profiles.find(p => p.id === id);
+        if (profile) {
+          const nome = profile.raw_user_meta_data?.name || profile.email || `Usuário ID: ${id}`;
+          return nome;
+        }
+        return `Usuário ID: ${id}`;
+      });
+
+      return responsaveisComNomes.sort();
+    } catch (error) {
+      console.error("Erro ao carregar responsáveis com nomes:", error);
+      return [...new Set(demandas.map(d => d.responsavel_designado).filter(Boolean))];
+    }
   };
 
   // Função para lidar com o drag and drop
@@ -188,7 +226,11 @@ export default function Dashboard() {
     const adserverMatch = filtros.adserver === "todos" || demanda.adserver === filtros.adserver;
     const agenciaMatch = filtros.agencia === "todos" || demanda.agencia === filtros.agencia;
     const clienteMatch = filtros.cliente_final === "todos" || demanda.cliente_final === filtros.cliente_final;
-    const responsavelMatch = filtros.responsavel_designado === "todos" || demanda.responsavel_designado === filtros.responsavel_designado;
+    
+    // Filtro de responsável: comparar nome do responsável com o filtro
+    const responsavelMatch = filtros.responsavel_designado === "todos" || 
+      (demanda.responsibleUser?.name === filtros.responsavel_designado);
+    
     return statusMatch && areaMatch && prioridadeMatch && adserverMatch && agenciaMatch && clienteMatch && responsavelMatch;
   });
 
