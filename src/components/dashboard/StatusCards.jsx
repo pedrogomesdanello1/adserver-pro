@@ -117,8 +117,8 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             </div>
             
             {/* Ícone de fundo com transparência - design elegante no canto inferior direito */}
-            <div className="absolute -bottom-2 -right-2 opacity-35">
-              <Icon className={`w-24 h-24 ${config.color}`} />
+            <div className="absolute -bottom-4 -right-4 opacity-27">
+              <Icon className={`w-32 h-32 ${config.color}`} />
             </div>
             
             <div className="flex items-baseline">
