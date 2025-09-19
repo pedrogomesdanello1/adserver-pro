@@ -101,7 +101,7 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`
-              relative bg-white dark:bg-slate-800 rounded-lg border-2 p-6 cursor-pointer transition-all duration-200
+              relative bg-white dark:bg-slate-800 rounded-lg border-2 p-6 cursor-pointer transition-all duration-200 overflow-hidden
               ${isSelected 
                 ? 'border-blue-500 shadow-lg shadow-blue-500/20' 
                 : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
@@ -117,7 +117,7 @@ const StatusCards = ({ demandas = [], onStatusClick, selectedStatus }) => {
             </div>
             
             {/* Ícone de fundo com transparência - design elegante no canto inferior direito */}
-            <div className="absolute -bottom-2 -right-2 opacity-35 overflow-hidden">
+            <div className="absolute -bottom-2 -right-2 opacity-35">
               <Icon className={`w-24 h-24 ${config.color}`} />
             </div>
             
