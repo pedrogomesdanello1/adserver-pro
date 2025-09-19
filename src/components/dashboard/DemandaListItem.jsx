@@ -28,36 +28,29 @@ import {
 import { formatDateSafely } from '@/utils/index';
 
 const statusConfig = {
-  pendente: { 
-    label: 'Pendente', 
+  pendente_visualizacao: { 
+    label: 'Pendente de Visualização', 
     color: 'text-amber-600', 
     bgColor: 'bg-amber-100',
     icon: Clock
   },
-  em_andamento: { 
-    label: 'Em Andamento', 
+  visualizada: { 
+    label: 'Visualizada', 
     color: 'text-blue-600', 
     bgColor: 'bg-blue-100',
+    icon: Eye
+  },
+  em_producao: { 
+    label: 'Em Produção', 
+    color: 'text-purple-600', 
+    bgColor: 'bg-purple-100',
     icon: AlertCircle
   },
-  concluido: { 
-    label: 'Concluído', 
+  finalizada: { 
+    label: 'Finalizada', 
     color: 'text-green-600', 
     bgColor: 'bg-green-100',
     icon: CheckCircle
-  },
-  cancelado: { 
-    label: 'Cancelado', 
-    color: 'text-red-600', 
-    bgColor: 'bg-red-100',
-    icon: XCircle
-  },
-  // Compatibilidade com status antigos
-  pendente_visualizacao: { 
-    label: 'Pendente', 
-    color: 'text-amber-600', 
-    bgColor: 'bg-amber-100',
-    icon: Eye
   }
 };
 

@@ -3,14 +3,12 @@ import { Comentario } from './Comentario';
 
 export const Demanda = {
   list: async () => {
-    // AQUI ESTÁ A MUDANÇA: Pedimos todos os dados da demanda (*),
-    // e também os dados da nossa nova tabela 'profiles' que está ligada pela coluna user_id.
-    // Damos o apelido de "profile" para esses dados do usuário.
-    // Também incluímos a contagem de comentários
+    // Carregar demandas com dados do responsável e contagem de comentários
     const { data, error } = await supabase
       .from('demandas')
       .select(`
         *, 
+        responsibleUser:profiles!responsavel_designado(name, email, avatar_url),
         comentarios_count:comentarios(count)
       `)
       .order('created_at', { ascending: false });
