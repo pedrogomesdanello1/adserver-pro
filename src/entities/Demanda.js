@@ -23,6 +23,8 @@ export const Demanda = {
         demandas.map(async (demanda) => {
           if (demanda.responsavel_designado) {
             try {
+              console.log(`Tentando carregar perfil para ID: ${demanda.responsavel_designado}`);
+              
               const { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('name, email, avatar_url')
@@ -34,13 +36,18 @@ export const Demanda = {
                 return demanda;
               }
               
-              console.log(`Responsável carregado para demanda ${demanda.id}:`, profile);
-              return {
-                ...demanda,
-                responsibleUser: profile
-              };
+              if (profile) {
+                console.log(`✅ Responsável carregado para demanda ${demanda.id}:`, profile);
+                return {
+                  ...demanda,
+                  responsibleUser: profile
+                };
+              } else {
+                console.log(`❌ Perfil não encontrado para ID: ${demanda.responsavel_designado}`);
+                return demanda;
+              }
             } catch (error) {
-              console.log(`Erro ao carregar perfil do responsável ${demanda.responsavel_designado}:`, error);
+              console.log(`❌ Erro ao carregar perfil do responsável ${demanda.responsavel_designado}:`, error);
               return demanda;
             }
           }
