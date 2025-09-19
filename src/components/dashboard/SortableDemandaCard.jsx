@@ -23,7 +23,7 @@ const SortableDemandaCard = ({ demanda, criador, onStatusChange, onDelete, onSel
     <div
       ref={setNodeRef}
       style={style}
-      className="h-full min-h-[300px]"
+      className="h-full min-h-[400px]"
     >
       <div className="relative h-full">
         {/* Handle de drag - apenas uma pequena área */}

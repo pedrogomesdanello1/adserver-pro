@@ -291,14 +291,14 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-[320px] ${
+      <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 shadow-sm bg-white flex flex-col h-[400px] ${
         demanda.prioridade === 'urgente' ? 'urgent-pulse border-red-200' : ''
       }`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 flex flex-col gap-2">
               <div>
-                <h3 className="font-semibold text-slate-900 text-lg leading-tight">
+                <h3 className="font-semibold text-slate-900 text-lg leading-tight line-clamp-2">
                   {demanda.titulo}
                 </h3>
                 <p className="text-slate-600 text-sm line-clamp-2 mt-1">
@@ -370,16 +370,16 @@ export default function DemandaCard({ demanda, criador, onStatusChange, onDelete
         
         <CardContent className="pt-0 flex-grow flex flex-col justify-end">
            <div className="space-y-2 text-sm text-slate-600 mt-4">
-             {demanda.adserver && ( <div className="flex items-center gap-2"><Server className="w-4 h-4 text-slate-400" /><span>{demanda.adserver}</span></div> )}
-             {demanda.agencia && ( <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400" /><span>{demanda.agencia}</span></div> )}
-             {demanda.cliente_final && ( <div className="flex items-center gap-2"><Building className="w-4 h-4 text-slate-400" /><span>{demanda.cliente_final}</span></div> )}
+             {demanda.adserver && ( <div className="flex items-center gap-2"><Server className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.adserver}</span></div> )}
+             {demanda.agencia && ( <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.agencia}</span></div> )}
+             {demanda.cliente_final && ( <div className="flex items-center gap-2"><Building className="w-4 h-4 text-slate-400 flex-shrink-0" /><span className="truncate">{demanda.cliente_final}</span></div> )}
            </div>
           <div className="flex items-center justify-between text-sm text-slate-500 mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-4">
               {responsibleUser && (
-                <div className="flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  <span>{responsibleUser.name}</span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <User className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{responsibleUser.name}</span>
                 </div>
               )}
               {demanda.prazo_estimado && (
